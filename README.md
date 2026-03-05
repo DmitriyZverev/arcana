@@ -2,6 +2,12 @@
 
 _A modern CLI tool for password-based encryption with human-readable output._
 
+## Status
+
+> [!IMPORTANT]
+> This project is in early development, and the API may change at any time.
+> Not recommended for production use.
+
 ## Features
 
 - **Strong Encryption**: `ChaCha20-Poly1305` authenticated encryption
