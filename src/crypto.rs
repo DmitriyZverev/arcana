@@ -177,7 +177,7 @@ impl Argon2Facade {
             )
             .map_err(|_| CryptoError::Hashing)?,
         )
-        .hash_password_into(&password, &salt, &mut key.as_mut())
+        .hash_password_into(password, salt, key.as_mut())
         .map_err(|_| CryptoError::Hashing)?;
         Ok(key)
     }
@@ -267,7 +267,7 @@ pub fn decrypt(
     password: &[u8],
 ) -> Result<Vec<u8>, DecryptError> {
     let key = match &encrypted_container.kdf {
-        Kdf::Argon2id(argon2) => argon2.hash_password(&encrypted_container.salt, &password)?,
+        Kdf::Argon2id(argon2) => argon2.hash_password(&encrypted_container.salt, password)?,
     };
     let ciphertext = ChaCha20Poly1305::new(Key::from_slice(key.as_ref()))
         .decrypt(
