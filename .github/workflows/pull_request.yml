@@ -10,6 +10,14 @@ jobs:
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
+  clippy:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: dtolnay/rust-toolchain@1.93.1
+        with:
+          components: clippy
+      - run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::all
   build:
     name: Build
     runs-on: ubuntu-22.04
