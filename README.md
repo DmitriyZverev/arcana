@@ -12,7 +12,7 @@ _A modern CLI tool for password-based encryption with human-readable output._
 
 - **Strong Encryption**: `ChaCha20-Poly1305` authenticated encryption
 - **Secure Key Derivation**: `Argon2id` with configurable parameters
-- **Stdin/Stdout Interface**: Unix-friendly pipeline integration
+- **Flexible I/O**: Stdin/stdout by default, with optional `--input-file` / `--output-file` flags
 - **YAML Output Format**: Human-readable encrypted containers
 
 ## Usage
@@ -20,22 +20,37 @@ _A modern CLI tool for password-based encryption with human-readable output._
 ### Encrypt Data
 
 ```bash
-# Read password interactively
+# Read from stdin, write to stdout
 echo "secret message" | arcana encrypt > encrypted.yml
 
-# Use password from file
-echo "secret message" | arcana encrypt --password-file password.txt > encrypted.yml
+# Read from file, write to stdout
+arcana encrypt --input-file secret.txt > encrypted.yml
+
+# Read from stdin, write to file
+echo "secret message" | arcana encrypt --output-file encrypted.yml
+
+# Read from file, write to file
+arcana encrypt --input-file secret.txt --output-file encrypted.yml
 ```
 
 ### Decrypt Data
 
 ```bash
-# Read password interactively
+# Read from stdin, write to stdout
 arcana decrypt < encrypted.yml > decrypted.txt
 
-# Use password from file
-arcana decrypt --password-file password.txt < encrypted.yml > decrypted.txt
+# Read from file, write to stdout
+arcana decrypt --input-file encrypted.yml > decrypted.txt
+
+# Read from stdin, write to file
+arcana decrypt --output-file decrypted.txt < encrypted.yml
+
+# Read from file, write to file
+arcana decrypt --input-file encrypted.yml --output-file decrypted.txt
 ```
+
+> [!NOTE]
+> When `--input-file` is provided, stdin is ignored. When `--output-file` is provided, nothing is written to stdout.
 
 ## Encrypted Container Format
 
