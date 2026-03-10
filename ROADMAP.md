@@ -25,7 +25,7 @@ arcana encrypt < decrypted.txt > encrypted.yml
 arcana decrypt < encrypted.yml > decrypted.txt
 ```
 
-### Step 2 — File path arguments `In progress`
+### Step 2 — File path arguments `Done`
 
 Add `--input` and `--output` flags as an alternative to stream redirection. Useful when
 integrating with scripts or tools that work with file paths directly.
