@@ -6,15 +6,15 @@ fn create_arcana() -> Command {
     Command::new(get_cargo_bin("arcana"))
 }
 
-fn create_password_file(password: &str) -> Result<tempfile::NamedTempFile, std::io::Error> {
-    let mut password_file = tempfile::NamedTempFile::new()?;
-    write!(password_file, "{}", password)?;
-    Ok(password_file)
+fn create_temp_file(content: &str) -> Result<tempfile::NamedTempFile, std::io::Error> {
+    let mut file = tempfile::NamedTempFile::new()?;
+    write!(file, "{}", content)?;
+    Ok(file)
 }
 
 #[test]
 fn encrypt_short_text() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -47,7 +47,7 @@ fn encrypt_short_text() -> anyhow::Result<()> {
 
 #[test]
 fn decrypt_short_text() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -83,7 +83,7 @@ fn decrypt_short_text() -> anyhow::Result<()> {
 
 #[test]
 fn encrypt_long_text() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -122,7 +122,7 @@ fn encrypt_long_text() -> anyhow::Result<()> {
 
 #[test]
 fn decrypt_long_text() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -162,7 +162,7 @@ fn decrypt_long_text() -> anyhow::Result<()> {
 
 #[test]
 fn decrypt_with_salt_and_nonce_in_lower_case() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -198,7 +198,7 @@ fn decrypt_with_salt_and_nonce_in_lower_case() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_password() -> anyhow::Result<()> {
-    let password_file = create_password_file("invalid_password")?;
+    let password_file = create_temp_file("invalid_password")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -234,7 +234,7 @@ fn try_decrypt_with_invalid_password() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_kdf_type() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -270,7 +270,7 @@ fn try_decrypt_with_invalid_kdf_type() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_kdf_memory() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -306,7 +306,7 @@ fn try_decrypt_with_invalid_kdf_memory() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_kdf_iterations() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -342,7 +342,7 @@ fn try_decrypt_with_invalid_kdf_iterations() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_kdf_parallelism() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -378,7 +378,7 @@ fn try_decrypt_with_invalid_kdf_parallelism() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_cipher_type() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -414,7 +414,7 @@ fn try_decrypt_with_invalid_cipher_type() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_salt() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
@@ -450,7 +450,7 @@ fn try_decrypt_with_invalid_salt() -> anyhow::Result<()> {
 
 #[test]
 fn try_decrypt_with_invalid_nonce() -> anyhow::Result<()> {
-    let password_file = create_password_file("test_password_123")?;
+    let password_file = create_temp_file("test_password_123")?;
     let mut arcana = create_arcana();
     assert_cmd_snapshot!(
         arcana
