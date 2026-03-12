@@ -1,0 +1,11 @@
+kdf:
+  type: Argon2id
+  version: 19
+  memory: 131072
+  iterations: 4
+  parallelism: 4
+cipher:
+  type: ChaCha20Poly1305
+salt: 1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b
+nonce: 0a0a0a0a0a0a0a0a0a0a0a0a
+ciphertext: RmuSIEhbLyex+iTUh1yYEdQ5IHcvz3UL7W+ZHQ==
