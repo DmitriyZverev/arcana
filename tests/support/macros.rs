@@ -10,21 +10,27 @@ macro_rules! assert_file {
 }
 
 #[macro_export]
+macro_rules! format_cmd_output {
+    ($code:expr, $stdout:expr, $stderr:expr) => {
+        format!(
+            "--------------\nexit code: {}\n--- stdout ---\n{}\n--- stderr ---\n{}\n--------------",
+            $code.map_or("none".to_string(), |c| c.to_string()),
+            String::from_utf8_lossy($stdout),
+            String::from_utf8_lossy($stderr),
+        )
+    };
+}
+
+#[macro_export]
 macro_rules! assert_cmd {
     ($output:expr, $expected:expr) => {
         let output = $output;
         let expected = $expected;
 
-        pretty_assertions::assert_eq!(output.status.code(), expected.code, "Status code mismatch");
         pretty_assertions::assert_eq!(
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&expected.stdout),
-            "Stdout mismatch"
-        );
-        pretty_assertions::assert_eq!(
-            String::from_utf8_lossy(&output.stderr),
-            String::from_utf8_lossy(&expected.stderr),
-            "Stderr mismatch"
+            format_cmd_output!(&output.status.code(), &output.stdout, &output.stderr),
+            format_cmd_output!(&expected.code, &expected.stdout, &expected.stderr),
+            "Command output mismatch"
         );
     };
 }
