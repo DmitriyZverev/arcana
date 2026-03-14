@@ -2,6 +2,7 @@ pub mod fixtures;
 pub mod macros;
 
 use std::io::Write;
+use std::path::Path;
 use std::process::{Command, Output, Stdio};
 
 pub struct ExpectedOutput {
@@ -64,4 +65,17 @@ pub fn create_temp_file(content: &str) -> Result<tempfile::NamedTempFile, std::i
     let mut file = tempfile::NamedTempFile::new()?;
     file.write_all(content.as_bytes())?;
     Ok(file)
+}
+
+pub fn create_temp_file_in(
+    dir: &Path,
+    content: &str,
+) -> Result<tempfile::NamedTempFile, std::io::Error> {
+    let mut file = tempfile::NamedTempFile::new_in(dir)?;
+    file.write_all(content.as_bytes())?;
+    Ok(file)
+}
+
+pub fn create_temp_dir() -> Result<tempfile::TempDir, std::io::Error> {
+    tempfile::TempDir::new()
 }

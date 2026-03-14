@@ -33,6 +33,9 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct CliArgs {
+    /// Working directory for resolving relative paths
+    #[arg(long, short = 'C')]
+    cwd: Option<PathBuf>,
     #[command(subcommand)]
     command: Option<SubCommand>,
 }
@@ -77,7 +80,10 @@ fn resolve_path(
 
 fn main() -> anyhow::Result<()> {
     let cli_args = CliArgs::parse();
-    let cwd = std::env::current_dir()?;
+    let cwd = match cli_args.cwd {
+        Some(path) => path,
+        None => std::env::current_dir()?,
+    };
     match cli_args.command {
         Some(SubCommand::Encrypt(SubCommandArgs {
             password_file,

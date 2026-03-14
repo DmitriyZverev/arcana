@@ -1,7 +1,10 @@
 mod support;
 
 use std::env::current_dir;
-use support::{ExpectedOutput, SpawnExt, arcana_cmd, create_temp_file, fixtures};
+use support::{
+    ExpectedOutput, SpawnExt, arcana_cmd, create_temp_dir, create_temp_file, create_temp_file_in,
+    fixtures,
+};
 
 #[test]
 fn encrypt_short_text() -> anyhow::Result<()> {
@@ -425,6 +428,33 @@ fn encrypt_with_input_and_output_files() -> anyhow::Result<()> {
 }
 
 #[test]
+fn encrypt_with_cwd_and_relative_input_and_output_files() -> anyhow::Result<()> {
+    let current_dir = create_temp_dir()?;
+    let password_file = create_temp_file_in(current_dir.path(), &fixtures::SHORT_TEXT.password()?)?;
+    let input_file = create_temp_file_in(current_dir.path(), &fixtures::SHORT_TEXT.plaintext()?)?;
+    let output_file = create_temp_file_in(current_dir.path(), "")?;
+    assert_cmd!(
+        arcana_cmd()
+            .arg("--cwd")
+            .arg(current_dir.path())
+            .arg("encrypt")
+            .arg("--password-file")
+            .arg(password_file.path())
+            .arg("--input-file")
+            .arg(input_file.path())
+            .arg("--output-file")
+            .arg(output_file.path())
+            .output()?,
+        ExpectedOutput::success()
+    );
+    assert_file!(
+        output_file.path(),
+        fixtures::SHORT_TEXT.encrypted_container()?
+    );
+    Ok(())
+}
+
+#[test]
 fn try_encrypt_with_relative_nonexistent_input_file() -> anyhow::Result<()> {
     let password_file = create_temp_file("test_password_123")?;
     assert_cmd!(
@@ -587,6 +617,31 @@ fn decrypt_with_input_and_output_files() -> anyhow::Result<()> {
             .arg(fixtures::SHORT_TEXT.password_file_path())
             .arg("--input-file")
             .arg(fixtures::SHORT_TEXT.encrypted_container_file_path())
+            .arg("--output-file")
+            .arg(output_file.path())
+            .output()?,
+        ExpectedOutput::success()
+    );
+    assert_file!(output_file.path(), fixtures::SHORT_TEXT.plaintext()?);
+    Ok(())
+}
+
+#[test]
+fn decrypt_with_cwd_and_relative_input_and_output_files() -> anyhow::Result<()> {
+    let current_dir = create_temp_dir()?;
+    let password_file = create_temp_file_in(current_dir.path(), &fixtures::SHORT_TEXT.password()?)?;
+    let input_file = create_temp_file_in(
+        current_dir.path(),
+        &fixtures::SHORT_TEXT.encrypted_container()?,
+    )?;
+    let output_file = create_temp_file_in(current_dir.path(), "")?;
+    assert_cmd!(
+        arcana_cmd()
+            .arg("decrypt")
+            .arg("--password-file")
+            .arg(password_file.path())
+            .arg("--input-file")
+            .arg(input_file.path())
             .arg("--output-file")
             .arg(output_file.path())
             .output()?,
