@@ -15,6 +15,8 @@ chacha20poly1305 = { version = "0.10.1", features = ["std"] }
 clap = { version = "4.5.60", features = ["derive"] }
 crossterm = { version = "0.29.0", features = ["use-dev-tty"] }
 hex = "0.4.3"
+path-absolutize = "3.1.1"
+pathdiff = "0.2.3"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_yaml = "0.9.34"
 thiserror = "2.0.18"

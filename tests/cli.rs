@@ -1,5 +1,6 @@
 mod support;
 
+use std::env::current_dir;
 use support::{ExpectedOutput, SpawnExt, arcana_cmd, create_temp_file, fixtures};
 
 #[test]
@@ -424,7 +425,7 @@ fn encrypt_with_input_and_output_files() -> anyhow::Result<()> {
 }
 
 #[test]
-fn try_encrypt_with_nonexistent_input_file() -> anyhow::Result<()> {
+fn try_encrypt_with_relative_nonexistent_input_file() -> anyhow::Result<()> {
     let password_file = create_temp_file("test_password_123")?;
     assert_cmd!(
         arcana_cmd()
@@ -435,7 +436,28 @@ fn try_encrypt_with_nonexistent_input_file() -> anyhow::Result<()> {
             .arg("./nonexistent/path/input.txt")
             .output()?,
         ExpectedOutput::failure().stderr(concat!(
-            "Error: Failed to read input file: ./nonexistent/path/input.txt\n",
+            "Error: Failed to read input file: \"nonexistent/path/input.txt\"\n",
+            "\n",
+            "Caused by:\n",
+            "    No such file or directory (os error 2)\n"
+        ))
+    );
+    Ok(())
+}
+
+#[test]
+fn try_encrypt_with_absolute_nonexistent_input_file() -> anyhow::Result<()> {
+    let password_file = create_temp_file("test_password_123")?;
+    assert_cmd!(
+        arcana_cmd()
+            .arg("encrypt")
+            .arg("--password-file")
+            .arg(password_file.path())
+            .arg("--input-file")
+            .arg(current_dir()?.join("nonexistent/path/input.txt"))
+            .output()?,
+        ExpectedOutput::failure().stderr(concat!(
+            "Error: Failed to read input file: \"nonexistent/path/input.txt\"\n",
             "\n",
             "Caused by:\n",
             "    No such file or directory (os error 2)\n"
@@ -575,7 +597,7 @@ fn decrypt_with_input_and_output_files() -> anyhow::Result<()> {
 }
 
 #[test]
-fn try_decrypt_with_nonexistent_input_file() -> anyhow::Result<()> {
+fn try_decrypt_with_relative_nonexistent_input_file() -> anyhow::Result<()> {
     let password_file = create_temp_file("test_password_123")?;
     assert_cmd!(
         arcana_cmd()
@@ -586,7 +608,28 @@ fn try_decrypt_with_nonexistent_input_file() -> anyhow::Result<()> {
             .arg("./nonexistent/path/input.txt")
             .output()?,
         ExpectedOutput::failure().stderr(concat!(
-            "Error: Failed to read input file: ./nonexistent/path/input.txt\n",
+            "Error: Failed to read input file: \"nonexistent/path/input.txt\"\n",
+            "\n",
+            "Caused by:\n",
+            "    No such file or directory (os error 2)\n",
+        ))
+    );
+    Ok(())
+}
+
+#[test]
+fn try_decrypt_with_absolute_nonexistent_input_file() -> anyhow::Result<()> {
+    let password_file = create_temp_file("test_password_123")?;
+    assert_cmd!(
+        arcana_cmd()
+            .arg("decrypt")
+            .arg("--password-file")
+            .arg(password_file.path())
+            .arg("--input-file")
+            .arg(current_dir()?.join("nonexistent/path/input.txt"))
+            .output()?,
+        ExpectedOutput::failure().stderr(concat!(
+            "Error: Failed to read input file: \"nonexistent/path/input.txt\"\n",
             "\n",
             "Caused by:\n",
             "    No such file or directory (os error 2)\n",
