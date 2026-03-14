@@ -52,6 +52,18 @@ arcana decrypt --input-file encrypted.yml --output-file decrypted.txt
 > [!NOTE]
 > When `--input-file` is provided, stdin is ignored. When `--output-file` is provided, nothing is written to stdout.
 
+### Override Working Directory
+
+Use the `--cwd` global flag to set the working directory for resolving all relative file paths:
+
+```bash
+# Without --cwd, relative paths are resolved against the current working directory
+cd /path/to/dir && arcana encrypt --input-file secret.txt --output-file encrypted.yml
+
+# With --cwd, relative paths are resolved against the specified directory
+arcana --cwd /path/to/dir encrypt --input-file secret.txt --output-file encrypted.yml
+```
+
 ## Encrypted Container Format
 
 The encrypted data is stored in a human-readable YAML format that describes all necessary settings for decryption:

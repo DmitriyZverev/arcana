@@ -17,6 +17,10 @@ impl Fixture {
         self.file_path("encrypted_container.yml")
     }
 
+    pub fn password(&self) -> Result<String, std::io::Error> {
+        std::fs::read_to_string(self.password_file_path())
+    }
+
     pub fn plaintext(&self) -> Result<String, std::io::Error> {
         std::fs::read_to_string(self.plaintext_file_path())
     }
