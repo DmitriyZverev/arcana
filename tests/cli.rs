@@ -96,7 +96,8 @@ fn try_decrypt_with_invalid_kdf_type() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2
+                  type: argon3
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 4
@@ -109,7 +110,38 @@ fn try_decrypt_with_invalid_kdf_type() -> anyhow::Result<()> {
                 "
             )?,
         ExpectedOutput::failure().stderr(
-            "Error: kdf.type: unknown variant `Argon2`, expected `Argon2id` at line 3 column 25\n"
+            "Error: kdf.type: unknown variant `argon3`, expected `argon2` at line 3 column 25\n"
+        )
+    );
+    Ok(())
+}
+
+#[test]
+fn try_decrypt_with_invalid_kdf_algorithm() -> anyhow::Result<()> {
+    let password_file = create_temp_file("test_password_123")?;
+    assert_cmd!(
+        arcana_cmd()
+            .arg("decrypt")
+            .arg("--password-file")
+            .arg(password_file.path())
+            .pass_stdin(
+                "
+                kdf:
+                  type: argon2
+                  algorithm: argon2
+                  version: 19
+                  memory: 131072
+                  iterations: 4
+                  parallelism: 4
+                cipher:
+                  type: ChaCha20Poly1305
+                salt: 1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B1B
+                nonce: 0A0A0A0A0A0A0A0A0A0A0A0A
+                ciphertext: RmuSIEhbLyex+iTUh1yYEdQ5IHcvz3UL7W+ZHQ==
+                "
+            )?,
+        ExpectedOutput::failure().stderr(
+            "Error: unknown variant `argon2`, expected one of `argon2i`, `argon2d`, `argon2id` at line 2 column 17\n"
         )
     );
     Ok(())
@@ -126,7 +158,8 @@ fn try_decrypt_with_invalid_kdf_memory() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131071
                   iterations: 4
@@ -154,7 +187,8 @@ fn try_decrypt_with_invalid_kdf_iterations() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 1
@@ -182,7 +216,8 @@ fn try_decrypt_with_invalid_kdf_parallelism() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 4
@@ -210,7 +245,8 @@ fn try_decrypt_with_invalid_cipher_type() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 4
@@ -223,7 +259,7 @@ fn try_decrypt_with_invalid_cipher_type() -> anyhow::Result<()> {
                 "
             )?,
         ExpectedOutput::failure().stderr(
-            "Error: cipher.type: unknown variant `ChaCha20Poly1304`, expected `ChaCha20Poly1305` at line 9 column 25\n"
+            "Error: cipher.type: unknown variant `ChaCha20Poly1304`, expected `ChaCha20Poly1305` at line 10 column 25\n"
         )
     );
     Ok(())
@@ -240,7 +276,8 @@ fn try_decrypt_with_invalid_salt() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 4
@@ -268,7 +305,8 @@ fn try_decrypt_with_invalid_nonce() -> anyhow::Result<()> {
             .pass_stdin(
                 "
                 kdf:
-                  type: Argon2id
+                  type: argon2
+                  algorithm: argon2id
                   version: 19
                   memory: 131072
                   iterations: 4

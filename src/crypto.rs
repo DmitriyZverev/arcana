@@ -63,6 +63,29 @@ mod hex_serde {
     }
 }
 
+mod algorithm_serde {
+    use argon2::Algorithm;
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(value: &Algorithm, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(Algorithm::as_str(value))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Algorithm, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let algorithm = String::deserialize(deserializer)?;
+
+        Algorithm::new(&algorithm)
+            .map_err(|_| D::Error::unknown_variant(&algorithm, &["argon2i", "argon2d", "argon2id"]))
+    }
+}
+
 mod version_serde {
     use argon2::Version;
     use serde::de::Error;
@@ -141,6 +164,8 @@ pub enum Cipher {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Argon2Facade {
+    #[serde(with = "algorithm_serde")]
+    pub algorithm: Algorithm,
     #[serde(with = "version_serde")]
     pub version: Version,
     pub memory: u32,
@@ -151,6 +176,7 @@ pub struct Argon2Facade {
 impl Default for Argon2Facade {
     fn default() -> Self {
         Self {
+            algorithm: Algorithm::default(),
             version: Version::default(),
             memory: 128 * 1024,
             iterations: 4,
@@ -167,7 +193,7 @@ impl Argon2Facade {
     ) -> Result<Zeroizing<[u8; KEY_LEN]>, CryptoError> {
         let mut key = Zeroizing::new([0u8; KEY_LEN]);
         Argon2::new(
-            Algorithm::Argon2id,
+            self.algorithm,
             self.version,
             Params::new(
                 self.memory,
@@ -184,14 +210,14 @@ impl Argon2Facade {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum Kdf {
-    Argon2id(Argon2Facade),
+    Argon2(Argon2Facade),
 }
 
 impl Default for Kdf {
     fn default() -> Self {
-        Self::Argon2id(Argon2Facade::default())
+        Self::Argon2(Argon2Facade::default())
     }
 }
 
@@ -238,7 +264,7 @@ fn generate_nonce() -> [u8; NONCE_LEN] {
 pub fn encrypt(encrypt_params: EncryptParams) -> Result<EncryptedContainer, EncryptError> {
     let salt = generate_salt()?;
     let key = match &encrypt_params.kdf {
-        Kdf::Argon2id(argon2) => argon2.hash_password(&salt, &encrypt_params.password)?,
+        Kdf::Argon2(argon2) => argon2.hash_password(&salt, &encrypt_params.password)?,
     };
 
     let (nonce, ciphertext) = match &encrypt_params.cipher {
@@ -267,7 +293,7 @@ pub fn decrypt(
     password: &[u8],
 ) -> Result<Vec<u8>, DecryptError> {
     let key = match &encrypted_container.kdf {
-        Kdf::Argon2id(argon2) => argon2.hash_password(&encrypted_container.salt, password)?,
+        Kdf::Argon2(argon2) => argon2.hash_password(&encrypted_container.salt, password)?,
     };
     let ciphertext = ChaCha20Poly1305::new(Key::from_slice(key.as_ref()))
         .decrypt(

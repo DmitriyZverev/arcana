@@ -70,7 +70,8 @@ The encrypted data is stored in a human-readable YAML format that describes all 
 
 ```yaml
 kdf:
-  type: Argon2id
+  type: argon2
+  algorithm: argon2id
   version: 19
   memory: 131072
   iterations: 4
