@@ -1,54 +1,12 @@
 mod cli;
+mod io;
 mod password;
 
 use crate::cli::{CliArgs, SubCommand};
+use crate::io::{read_input, resolve_path, write_output};
 use crate::password::read_password;
-use anyhow::Context;
 use arkana::EncryptParams;
 use clap::Parser;
-use path_absolutize::Absolutize;
-use pathdiff::diff_paths;
-use std::fs;
-use std::io::{Read, Write};
-use std::path::PathBuf;
-
-fn read_input(path: Option<PathBuf>, cwd: &PathBuf) -> anyhow::Result<Vec<u8>> {
-    match path {
-        Some(p) => fs::read(&p).with_context(|| {
-            format!(
-                "Failed to read input file: \"{}\"",
-                diff_paths(&p, cwd).as_deref().unwrap_or(&p).display()
-            )
-        }),
-        None => {
-            let mut data = Vec::new();
-            std::io::stdin().read_to_end(&mut data)?;
-            Ok(data)
-        }
-    }
-}
-
-fn write_output(data: &[u8], path: Option<PathBuf>, cwd: &PathBuf) -> anyhow::Result<()> {
-    match path {
-        Some(p) => fs::write(&p, data).with_context(|| {
-            format!(
-                "Failed to write output file: \"{}\"",
-                diff_paths(&p, cwd).as_deref().unwrap_or(&p).display()
-            )
-        }),
-        None => Ok(std::io::stdout().write_all(data)?),
-    }
-}
-
-fn resolve_path(
-    base: &std::path::Path,
-    path: Option<PathBuf>,
-) -> Result<Option<PathBuf>, std::io::Error> {
-    match path {
-        Some(p) => Ok(Some(p.absolutize_from(base)?.to_path_buf())),
-        None => Ok(None),
-    }
-}
 
 fn main() -> anyhow::Result<()> {
     let cli_args = CliArgs::parse();
