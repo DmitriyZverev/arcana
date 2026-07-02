@@ -82,23 +82,25 @@ cargo xtask <command> [args...]
 
 ## Commit conventions
 
-- Use imperative mood in commit messages (e.g., "Add feature X" instead of "Added feature X").
-- Use `git commit --fixup` and `git rebase -i` to clean up commit history during development.
-- Each pull request must be squashed into a single commit before merging (`1 PR = 1 commit`).
-- Use the following pattern for commit messages:
-  ```
-  <type>: <short description>
-  
-  <full description (if needed)>
-  ```
-  where `<type>` indicates the **impact on the production artifact** (the
-  compiled binary distributed to users):
+Use the following pattern for commit messages:
+
+```text
+<impact>: <short description>
+
+<full description (if needed)>
+
+<tags (if needed)>
+```
+
+where:
+
+- `<impact>` indicates the **impact on the production artifact** (the compiled binary distributed to users):
     - `MAJOR` — breaking changes in the **public API** of the
       program.
 
       Examples:
         - Removing or renaming CLI commands, arguments, or flags
-        - Changing output format in an incompatible way
+        - Changing the output format in an incompatible way
         - Changing configuration format incompatibly
         - Changing exit codes
         - Any change that requires users or scripts to update
@@ -128,10 +130,48 @@ cargo xtask <command> [args...]
         - Repository infrastructure
         - Development tooling
         - Updates to `[dev-dependencies]`
+- `<short description>` - a concise, imperative-mood summary of the change (e.g., "Add feature X").
+- `<full description>` - additional context explaining what changed and why, if the short description alone is not
+  enough to understand the change.
+- `<tags>` - extra tagged data about the change, if needed. Possible tags:
+    - `BREAKING_CHANGE` - required for `MAJOR` commits; describes what breaks for users and how to migrate
+      (e.g., a before/after comparison of an incompatible format change).
+    - `PR` - the pull request number this commit originates from (e.g., `PR: #44`).
 
-  If a change includes multiple aspects (e.g., a bug fix and test updates),
-  choose the type based on the **highest impact on the production artifact**.
-- Limit commit message line length to 72 characters.
+  Example:
+  ```text
+  ...
+
+  BREAKING_CHANGE:
+  Existing YAML envelopes must be updated manually.
+
+  Before:
+
+  <code>
+  kdf:
+      type: argon2
+      ...
+      salt: GxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxs=
+  </code>
+
+  After:
+
+  <code>
+  encoding: base64
+  kdf:
+      type: argon2
+      ...
+  salt: GxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxs=
+  </code>
+
+  PR: #44
+
+  ```
+
+If a change includes multiple aspects (e.g., a bug fix and test updates),
+choose the `<impact>` value with the **highest impact on the production artifact**.
+
+Limit commit message line length to 72 characters, excluding formatted blocks (e.g., code blocks, tables) and links.
 
 ## Version determination
 
@@ -152,6 +192,8 @@ Releases are created from the `main` branch after version determination.
 ## Pull requests
 
 - Target the `main` branch.
+- Each pull request must be squashed into a single commit before merging (`1 PR = 1 commit`).
+- Use `git commit --fixup` and `git rebase -i` to clean up commit history during development.
 - Keep each PR focused on a single change.
 - If you want to make multiple changes, submit multiple PRs.
 - If you need to refactor code, do it in a separate PR before making the feature changes.
