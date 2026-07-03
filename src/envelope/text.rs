@@ -1,3 +1,5 @@
+pub(crate) mod yaml;
+
 use crate::envelope;
 use crate::envelope::Argon2Params;
 use data_encoding::{BASE32, BASE64, HEXUPPER, HEXUPPER_PERMISSIVE};
