@@ -1,5 +1,18 @@
 use std::path::PathBuf;
 
+const PLACEHOLDERS: &[(&str, &str)] = &[
+    ("${CARGO_PKG_VERSION}", env!("CARGO_PKG_VERSION")),
+    ("${CARGO_PKG_REPOSITORY}", env!("CARGO_PKG_REPOSITORY")),
+];
+
+fn substitute_placeholders(content: String) -> String {
+    PLACEHOLDERS
+        .iter()
+        .fold(content, |content, (placeholder, value)| {
+            content.replace(placeholder, value)
+        })
+}
+
 pub struct Fixture {
     name: &'static str,
 }
@@ -26,7 +39,8 @@ impl Fixture {
     }
 
     pub fn envelope(&self) -> Result<String, std::io::Error> {
-        std::fs::read_to_string(self.envelope_file_path())
+        let content = std::fs::read_to_string(self.envelope_file_path())?;
+        Ok(substitute_placeholders(content))
     }
 
     pub fn envelope_bin_file_path(&self) -> PathBuf {
