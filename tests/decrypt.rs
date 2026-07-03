@@ -1148,7 +1148,8 @@ fn try_decrypt_yaml_envelope_with_qr_format() -> anyhow::Result<()> {
             .arg(fixtures::DEFAULT.password_file_path())
             .pass_stdin(fixtures::DEFAULT.envelope()?)?,
         ExpectedOutput::failure().stderr(indoc! {"
-            Error: failed to read entire block
+            Error: numeric field was not a number: ILE MANU when getting cksum for # Arkana-encrypted envelope (arkana v0.1.0)
+            # Decrypt instructions: https://github.com/DmitriyZverev
         "})
     );
     Ok(())
