@@ -2,13 +2,13 @@
 
 _This document outlines the planned development stages for `arkana`._
 
-_Each step builds on the previous one, progressively expanding the interface from basic
-stdin/stdout piping to a full interactive experience_
+_Each step builds on the previous one, progressively expanding the interface
+from basic stdin/stdout piping to a full interactive experience_
 
 ## Status legend
 
 | Badge         | Meaning                            |
-|---------------|------------------------------------|
+| ------------- | ---------------------------------- |
 | `Done`        | Fully implemented and available    |
 | `In progress` | Work has started, not yet complete |
 | `Planned`     | Scheduled, work not yet started    |
@@ -17,8 +17,8 @@ stdin/stdout piping to a full interactive experience_
 
 ### Step 1 — Basic stdin/stdout interface `Done`
 
-Encrypt and decrypt data using standard input/output streams. This is the minimal
-viable interface and serves as the foundation for all later steps.
+Encrypt and decrypt data using standard input/output streams. This is the
+minimal viable interface and serves as the foundation for all later steps.
 
 ```shell
 arkana encrypt < decrypted.txt > encrypted.yml
@@ -27,8 +27,9 @@ arkana decrypt < encrypted.yml > decrypted.txt
 
 ### Step 2 — File path arguments `Done`
 
-Add `--input` and `--output` flags as an alternative to stream redirection. Useful when
-integrating with scripts or tools that work with file paths directly.
+Add `--input` and `--output` flags as an alternative to stream redirection.
+Useful when integrating with scripts or tools that work with file paths
+directly.
 
 ```shell
 arkana encrypt --input ./decrypted.txt --output ./encrypted.yml
@@ -52,7 +53,8 @@ arkana encrypt --kdf-type argon2 \
 Supported flags:
 
 - `--kdf-type <type>` — select key derivation function (`argon2`)
-- `--kdf-argon2-algorithm <algorithm>` — Argon2 algorithm (`argon2id`, `argon2i`, `argon2d`; default: `argon2id`)
+- `--kdf-argon2-algorithm <algorithm>` — Argon2 algorithm (`argon2id`,
+  `argon2i`, `argon2d`; default: `argon2id`)
 - `--kdf-argon2-version <version>` — Argon2 version (`16`, `19`; default: `19`)
 - `--kdf-argon2-memory <kib>` — memory in KiB (default: `131072`)
 - `--kdf-argon2-iterations <n>` — number of iterations (default: `4`)
@@ -61,8 +63,8 @@ Supported flags:
 
 ### Step 4 — Configuration file `Planned`
 
-Add support for a configuration file at `$HOME/.arkana/config.toml` for setting default
-encryption parameters:
+Add support for a configuration file at `$HOME/.arkana/config.toml` for setting
+default encryption parameters:
 
 ```toml
 # $HOME/.arkana/config.toml
@@ -114,15 +116,15 @@ A new `--encoding` flag is available during encryption:
 arkana encrypt --encoding base16 < decrypted.txt > encrypted.yml
 ```
 
-During decryption the `encoding` field is read from the envelope — no flag
-is needed.
+During decryption the `encoding` field is read from the envelope — no flag is
+needed.
 
 ### Step 6 — Binary container format `Done`
 
-Add `--format` flag to `encrypt` and `decrypt` commands with two supported values:
-`yaml` (default) and `binary`. The binary format serializes the encrypted container
-using CBOR (Concise Binary Object Representation) — a compact, binary encoding of the
-same fields as the YAML container.
+Add `--format` flag to `encrypt` and `decrypt` commands with two supported
+values: `yaml` (default) and `binary`. The binary format serializes the
+encrypted container using CBOR (Concise Binary Object Representation) — a
+compact, binary encoding of the same fields as the YAML container.
 
 ```shell
 arkana encrypt --format binary < decrypted.txt > encrypted.bin
@@ -137,17 +139,17 @@ values are stored as raw bytes in CBOR. The `--encoding` flag is ignored when
 
 ### Step 7 — Format conversion `Done`
 
-Add a `convert` command that transforms an encrypted envelope from one format
-to another without decryption. The envelope content is preserved exactly —
-no password is required and no re-encryption occurs.
+Add a `convert` command that transforms an encrypted envelope from one format to
+another without decryption. The envelope content is preserved exactly — no
+password is required and no re-encryption occurs.
 
 ```shell
 arkana convert --from-format yaml --to-format binary --input envelope.yml --output envelope.bin
 arkana convert --from-format binary --to-format yaml --input envelope.bin --output envelope.yml
 ```
 
-Both `--from-format` and `--to-format` are required. Supported values match
-the `--format` flag: `yaml`, `binary`, and (after Step 8) `qr`.
+Both `--from-format` and `--to-format` are required. Supported values match the
+`--format` flag: `yaml`, `binary`, and (after Step 8) `qr`.
 
 Standard I/O is supported:
 
@@ -157,8 +159,8 @@ arkana convert --from-format yaml --to-format binary < envelope.yml > envelope.b
 
 ### Step 8 — QR code format `Done`
 
-Add `qr` as a new value for the `--format` flag, enabling QR code images as
-an alternative container format. Useful for physical backups and paper storage.
+Add `qr` as a new value for the `--format` flag, enabling QR code images as an
+alternative container format. Useful for physical backups and paper storage.
 
 ```shell
 arkana encrypt --format qr < decrypted.txt > qr_codes.tar
@@ -180,9 +182,9 @@ Encrypt always outputs a TAR archive containing one or more PNG images. When the
 encrypted container exceeds the capacity of a single QR code, it is split across
 multiple independent symbols, each readable by any standard QR scanner.
 
-Decrypt accepts a TAR archive, a PNG, or a JPEG image — auto-detected from the input.
-A single image may contain multiple QR codes (e.g., a photo of a printed page).
-Images within a TAR archive need not be ordered.
+Decrypt accepts a TAR archive, a PNG, or a JPEG image — auto-detected from the
+input. A single image may contain multiple QR codes (e.g., a photo of a printed
+page). Images within a TAR archive need not be ordered.
 
 Each QR code symbol encodes a binary payload in the following format:
 
@@ -198,9 +200,10 @@ Each QR code symbol encodes a binary payload in the following format:
 
 ### Step 9 — PDF render (`arkana render`) `Planned`
 
-Add a new `render` command that produces a printable PDF document from an encrypted
-envelope. The PDF serves as a physical backup — it contains QR codes (CBOR-encoded)
-and a formatted human-readable representation of the envelope fields.
+Add a new `render` command that produces a printable PDF document from an
+encrypted envelope. The PDF serves as a physical backup — it contains QR codes
+(CBOR-encoded) and a formatted human-readable representation of the envelope
+fields.
 
 ```shell
 # From stdin (default format: yaml):
@@ -216,22 +219,22 @@ arkana encrypt --format binary | arkana render --format binary --output backup.p
 arkana encrypt | arkana render > backup.pdf
 ```
 
-`render` accepts an envelope in any supported format via `--format`
-(`yaml`, `binary`, `qr`; default: `yaml`). The output is always a PDF file.
+`render` accepts an envelope in any supported format via `--format` (`yaml`,
+`binary`, `qr`; default: `yaml`). The output is always a PDF file.
 
 **PDF layout:**
 
 The PDF consists of two sections, in order:
 
-1. **QR code pages** — each page contains up to 6 QR codes arranged in a 2×3 grid
-   (2 columns, 3 rows). QR codes use version 10 and encode the same binary payload
-   format as `--format qr` (Step 8). If there are more than 6 QR codes, they
-   continue on later pages.
+1. **QR code pages** — each page contains up to 6 QR codes arranged in a 2×3
+   grid (2 columns, 3 rows). QR codes use version 10 and encode the same binary
+   payload format as `--format qr` (Step 8). If there are more than 6 QR codes,
+   they continue on later pages.
 
 2. **Envelope detail pages** — a formatted, human-readable representation of the
-   envelope fields (KDF parameters, cipher type, nonce, tag, truncated ciphertext)
-   with graphical elements (lines, tables). This is not raw YAML — it is a
-   custom-rendered representation.
+   envelope fields (KDF parameters, cipher type, nonce, tag, truncated
+   ciphertext) with graphical elements (lines, tables). This is not raw YAML —
+   it is a custom-rendered representation.
 
 **Page metadata (on every page):**
 
@@ -245,7 +248,8 @@ Introduce a secret registry stored in `$HOME/.arkana/secrets/`. Each encryption
 creates a new versioned snapshot of the secret, making it possible to track and
 restore previous versions. Secrets are always stored in YAML format.
 
-The secrets directory can be overridden via `--secrets-dir` or via `config.toml`:
+The secrets directory can be overridden via `--secrets-dir` or via
+`config.toml`:
 
 ```shell
 arkana --secrets-dir /path/to/secrets secret encrypt <secret-name> < ./decrypted.txt
@@ -262,8 +266,8 @@ dir = "/path/to/secrets"
 
 File naming pattern: `<secret-name>.YYYY_MM_DD_HH_mm_ss_fffffffff_<counter>.yml`
 
-The timestamp in the filename is always in UTC. The latest version is determined by this timestamp
-(and counter as a tiebreaker).
+The timestamp in the filename is always in UTC. The latest version is determined
+by this timestamp (and counter as a tiebreaker).
 
 **Encrypting a named secret:**
 
@@ -278,8 +282,8 @@ arkana secret encrypt <secret-name> --input ./decrypted.txt
 Both commands write the encrypted result to:
 `$HOME/.arkana/secrets/<secret-name>.YYYY_MM_DD_HH_mm_ss_fffffffff_<counter>.yml`
 
-Each invocation creates a new version; existing versions are never modified. `--output` is not
-supported — the destination is always the secrets directory.
+Each invocation creates a new version; existing versions are never modified.
+`--output` is not supported — the destination is always the secrets directory.
 
 **Decrypting a named secret:**
 
@@ -301,8 +305,9 @@ arkana secret decrypt <secret-name> --version 2024_03_16_130000_000000000_0001 >
 arkana secret decrypt <secret-name> --version 2024_03_16_130000_000000000_0001 --output ./decrypted.txt
 ```
 
-The version identifier matches the filename suffix returned by `arkana secret list-versions <name>`.
-Without `--version`, the latest version is used. Exits with an error if the secret or version does not exist.
+The version identifier matches the filename suffix returned by
+`arkana secret list-versions <name>`. Without `--version`, the latest version is
+used. Exits with an error if the secret or version does not exist.
 
 **Listing all secrets:**
 
@@ -324,7 +329,8 @@ baz
 arkana secret list-versions <secret-name>
 ```
 
-Outputs the list of available versions for the specified secret, ordered from oldest to newest:
+Outputs the list of available versions for the specified secret, ordered from
+oldest to newest:
 
 ```
 2024_03_16_120000_000000000_0001
@@ -342,8 +348,9 @@ arkana secret delete <secret-name>
 arkana secret delete <secret-name> --version 2024_03_16_120000_000000000_0001
 ```
 
-Without `--version`, all versions are deleted. Any deletion requires interactive confirmation or `--force`
-to proceed. Exits with an error if the secret or version does not exist.
+Without `--version`, all versions are deleted. Any deletion requires interactive
+confirmation or `--force` to proceed. Exits with an error if the secret or
+version does not exist.
 
 **Renaming a secret:**
 
@@ -355,8 +362,8 @@ Renames all version files of the secret in `$HOME/.arkana/secrets/`.
 
 ### Step 11 — Interactive mode (TUI) `Planned`
 
-Run the tool without arguments to launch a terminal user interface (TUI) for browsing,
-decrypting, editing, and re-encrypting stored secrets.
+Run the tool without arguments to launch a terminal user interface (TUI) for
+browsing, decrypting, editing, and re-encrypting stored secrets.
 
 ```shell
 arkana
