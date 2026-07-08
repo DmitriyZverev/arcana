@@ -7,7 +7,8 @@
           "rs"
         ],
         "cacheKeyFiles": [
-          "Cargo.toml"
+          "Cargo.toml",
+          "rust-toolchain.toml"
         ]
       }
     ]
