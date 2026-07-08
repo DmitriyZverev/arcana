@@ -6,10 +6,10 @@ resolver = "2"
 name = "arkana"
 version = "0.1.0"
 edition = "2024"
-description = "A modern CLI tool for password-based encryption with human-readable output"
 license = "MIT"
 repository = "https://github.com/DmitriyZverev/arkana"
 rust-version = "1.88.0"
+description = "A modern CLI tool for password-based encryption with human-readable output"
 
 [features]
 deterministic = []

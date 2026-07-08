@@ -4,6 +4,7 @@
 
 - Rust `1.88.0` or later: https://rustup.rs
 - `rustfmt` and `clippy` components: `rustup component add rustfmt clippy`
+- `dprint`: `cargo install dprint`
 
 ## Development workflow
 
@@ -24,7 +25,7 @@ Before submitting a PR, ensure the following checks pass:
 3. Format the code:
 
    ```bash
-   cargo fmt --all
+   dprint fmt
    ```
 
 ## Tests
@@ -35,8 +36,9 @@ To run all tests:
 cargo test && cargo test --features deterministic
 ```
 
-The `deterministic` feature must be enabled when running snapshot tests. It replaces random salt/nonce generation with
-fixed values to make snapshots reproducible.
+The `deterministic` feature must be enabled when running snapshot tests. It
+replaces random salt/nonce generation with fixed values to make snapshots
+reproducible.
 
 To run a single test:
 
@@ -47,8 +49,9 @@ cargo test <test_name>
 cargo test --features deterministic <test_name>
 ```
 
-Prefer integration tests over unit tests to ensure the behavior of the compiled binary is validated from the user's
-perspective. All integration tests live in `tests/*`.
+Prefer integration tests over unit tests to ensure the behavior of the compiled
+binary is validated from the user's perspective. All integration tests live in
+`tests/*`.
 
 ## Code coverage
 
@@ -74,7 +77,8 @@ cargo llvm-cov report --html --open
 
 ## Dev utilities (`xtask`)
 
-The `xtask` package contains dev utilities for generating test fixtures and working with internal formats. Run them via:
+The `xtask` package contains dev utilities for generating test fixtures and
+working with internal formats. Run them via:
 
 ```bash
 cargo xtask <command> [args...]
@@ -94,49 +98,53 @@ Use the following pattern for commit messages:
 
 where:
 
-- `<impact>` indicates the **impact on the production artifact** (the compiled binary distributed to users):
-    - `MAJOR` — breaking changes in the **public API** of the
-      program.
+- `<impact>` indicates the **impact on the production artifact** (the compiled
+  binary distributed to users):
+  - `MAJOR` — breaking changes in the **public API** of the program.
 
-      Examples:
-        - Removing or renaming CLI commands, arguments, or flags
-        - Changing the output format in an incompatible way
-        - Changing configuration format incompatibly
-        - Changing exit codes
-        - Any change that requires users or scripts to update
-    - `MINOR` — backward-compatible additions to the **public API**.
+    Examples:
+    - Removing or renaming CLI commands, arguments, or flags
+    - Changing the output format in an incompatible way
+    - Changing configuration format incompatibly
+    - Changing exit codes
+    - Any change that requires users or scripts to update
+  - `MINOR` — backward-compatible additions to the **public API**.
 
-      Examples:
-        - Adding new CLI commands or flags
-        - Adding new optional configuration fields
-        - Extending the output format in a backward-compatible way
-        - Deprecating CLI options
-    - `PATCH` — changes affecting **the production artifact** without
-      modifying its public API.
+    Examples:
+    - Adding new CLI commands or flags
+    - Adding new optional configuration fields
+    - Extending the output format in a backward-compatible way
+    - Deprecating CLI options
+  - `PATCH` — changes affecting **the production artifact** without modifying
+    its public API.
 
-      Examples:
-        - Bug fixes
-        - Internal refactoring
-        - Performance improvements
-        - Dependency updates (`[dependencies]`)
-        - Internal implementation changes
-    - `OTHER` — changes that **do not affect the production artifact** or its public API.
+    Examples:
+    - Bug fixes
+    - Internal refactoring
+    - Performance improvements
+    - Dependency updates (`[dependencies]`)
+    - Internal implementation changes
+  - `OTHER` — changes that **do not affect the production artifact** or its
+    public API.
 
-      Examples:
-        - Tests
-        - Examples
-        - Documentation
-        - CI/CD configuration
-        - Repository infrastructure
-        - Development tooling
-        - Updates to `[dev-dependencies]`
-- `<short description>` - a concise, imperative-mood summary of the change (e.g., "Add feature X").
-- `<full description>` - additional context explaining what changed and why, if the short description alone is not
-  enough to understand the change.
+    Examples:
+    - Tests
+    - Examples
+    - Documentation
+    - CI/CD configuration
+    - Repository infrastructure
+    - Development tooling
+    - Updates to `[dev-dependencies]`
+- `<short description>` - a concise, imperative-mood summary of the change
+  (e.g., "Add feature X").
+- `<full description>` - additional context explaining what changed and why, if
+  the short description alone is not enough to understand the change.
 - `<tags>` - extra tagged data about the change, if needed. Possible tags:
-    - `BREAKING_CHANGE` - required for `MAJOR` commits; describes what breaks for users and how to migrate
-      (e.g., a before/after comparison of an incompatible format change).
-    - `PR` - the pull request number this commit originates from (e.g., `PR: #44`).
+  - `BREAKING_CHANGE` - required for `MAJOR` commits; describes what breaks for
+    users and how to migrate (e.g., a before/after comparison of an incompatible
+    format change).
+  - `PR` - the pull request number this commit originates from (e.g.,
+    `PR: #44`).
 
   Example:
   ```text
@@ -165,18 +173,17 @@ where:
   </code>
 
   PR: #44
-
   ```
 
-If a change includes multiple aspects (e.g., a bug fix and test updates),
-choose the `<impact>` value with the **highest impact on the production artifact**.
+If a change includes multiple aspects (e.g., a bug fix and test updates), choose
+the `<impact>` value with the **highest impact on the production artifact**.
 
-Limit commit message line length to 72 characters, excluding formatted blocks (e.g., code blocks, tables) and links.
+Limit commit message line length to 72 characters, excluding formatted blocks
+(e.g., code blocks, tables) and links.
 
 ## Version determination
 
-Release versions must be determined from commit history since
-the last release:
+Release versions must be determined from commit history since the last release:
 
 ```
 if any MAJOR commits → major version bump
@@ -192,11 +199,14 @@ Releases are created from the `main` branch after version determination.
 ## Pull requests
 
 - Target the `main` branch.
-- Each pull request must be squashed into a single commit before merging (`1 PR = 1 commit`).
-- Use `git commit --fixup` and `git rebase -i` to clean up commit history during development.
+- Each pull request must be squashed into a single commit before merging
+  (`1 PR = 1 commit`).
+- Use `git commit --fixup` and `git rebase -i` to clean up commit history during
+  development.
 - Keep each PR focused on a single change.
 - If you want to make multiple changes, submit multiple PRs.
-- If you need to refactor code, do it in a separate PR before making the feature changes.
+- If you need to refactor code, do it in a separate PR before making the feature
+  changes.
 - Include tests for new features and bug fixes.
 - Update `README.md` if the change affects user-facing behavior.
 - Ensure all CI checks pass.
