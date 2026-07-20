@@ -1,11 +1,5 @@
 # Contributing
 
-## Prerequisites
-
-- Rust `1.88.0` or later: https://rustup.rs
-- `rustfmt` and `clippy` components: `rustup component add rustfmt clippy`
-- `dprint`: `cargo install dprint`
-
 ## Development workflow
 
 Before submitting a PR, ensure the following checks pass:
@@ -16,13 +10,22 @@ Before submitting a PR, ensure the following checks pass:
    cargo test && cargo test --features deterministic
    ```
 
-2. Run linter and static analysis:
+2. Run linter and static analysis. Requires the `clippy` component:
+
+   ```bash
+   rustup component add clippy
+   ```
 
    ```bash
    cargo clippy --all-targets --all-features -- -D warnings -W clippy::all
    ```
 
-3. Format the code:
+3. Format the code. Requires the `rustfmt` component and `dprint` `0.55.1`:
+
+   ```bash
+   rustup component add rustfmt && \
+   cargo install dprint --version 0.55.1 --locked
+   ```
 
    ```bash
    dprint fmt
@@ -55,16 +58,12 @@ binary is validated from the user's perspective. All integration tests live in
 
 ## Code coverage
 
-Prerequisites:
+Requires the `llvm-tools-preview` component and `cargo-llvm-cov`:
 
-- `llvm-tools-preview` component:
-  ```bash
-  rustup component add llvm-tools-preview
-  ```
-- `cargo-llvm-cov`:
-  ```bash
-  cargo install cargo-llvm-cov
-  ```
+```bash
+rustup component add llvm-tools-preview && \
+cargo install cargo-llvm-cov --version 0.8.7 --locked
+```
 
 To generate an HTML coverage report locally:
 
