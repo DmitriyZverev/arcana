@@ -198,49 +198,73 @@ Each QR code symbol encodes a binary payload in the following format:
 [N bytes] fragment — a binary fragment of the CBOR-encoded encrypted container
 ```
 
-### Step 9 — PDF render (`arkana render`) `Planned`
+### Step 9 — PDF format (`--format pdf`) `Planned`
 
-Add a new `render` command that produces a printable PDF document from an
-encrypted envelope. The PDF serves as a physical backup — it contains QR codes
-(CBOR-encoded) and a formatted human-readable representation of the envelope
-fields.
+Add `pdf` as a new value for the `--format` flag on `encrypt`, `decrypt`, and
+`convert` commands. The PDF serves as a physical backup — it contains embedded
+raster QR code images (same binary payload format as `--format qr`, Step 8) and
+a formatted human-readable representation of the envelope fields.
 
 ```shell
-# From stdin (default format: yaml):
-arkana encrypt | arkana render --output backup.pdf
+# Encrypt directly to PDF:
+arkana encrypt --format pdf \
+               --output backup.pdf \
+               --input decrypted.txt
+arkana encrypt --format pdf \
+               --format-pdf-title "My Secret" \
+               --format-pdf-timestamp "2024-01-01T00:00:00Z" \
+               --output backup.pdf \
+               --input decrypted.txt
 
-# From file:
-arkana render --input envelope.yaml --output backup.pdf
+# Decrypt from PDF:
+arkana decrypt --format pdf \
+               --input backup.pdf \
+               --output decrypted.txt
 
-# Binary format:
-arkana encrypt --format binary | arkana render --format binary --output backup.pdf
+# Convert existing envelope to PDF:
+arkana convert --from-format yaml \
+               --to-format pdf \
+               --input envelope.yml \
+               --output backup.pdf
+arkana convert --from-format yaml \
+               --to-format pdf \
+               --to-format-pdf-title "My Secret" \
+               --to-format-pdf-timestamp "2024-01-01T00:00:00Z" \
+               --input envelope.yml \
+               --output backup.pdf
 
-# To stdout:
-arkana encrypt | arkana render > backup.pdf
+# Convert from PDF to another format:
+arkana convert --from-format pdf \
+               --to-format yaml \
+               --input backup.pdf \
+               --output envelope.yml
 ```
 
-`render` accepts an envelope in any supported format via `--format` (`yaml`,
-`binary`, `qr`; default: `yaml`). The output is always a PDF file.
+`--format-pdf-title` sets an optional title shown in the PDF header. If omitted,
+the title is left empty. The same flag is available on `convert --to-format pdf`
+as `--to-format-pdf-title`.
+
+`--format-pdf-timestamp` accepts an ISO 8601 datetime string and sets the
+timestamp shown in the PDF header. If omitted, the current UTC time is used. The
+same flag is available on `convert --to-format pdf` as
+`--to-format-pdf-timestamp`.
 
 **PDF layout:**
 
-The PDF consists of two sections, in order:
+Each page has a header and a body. The header contains the title, SHA-256
+checksum of the CBOR-encoded envelope, page number, timestamp, and arkana
+version. The body contains up to 4 fragment rows. Fragments are laid out in
+document order: encryption parameters fragments first, then ciphertext
+fragments. Each fragment row contains a QR code (same binary payload format as
+`--format qr`, Step 8) and a human-readable representation of the fragment data.
 
-1. **QR code pages** — each page contains up to 6 QR codes arranged in a 2×3
-   grid (2 columns, 3 rows). QR codes use version 10 and encode the same binary
-   payload format as `--format qr` (Step 8). If there are more than 6 QR codes,
-   they continue on later pages.
+**Decoding from PDF:**
 
-2. **Envelope detail pages** — a formatted, human-readable representation of the
-   envelope fields (KDF parameters, cipher type, nonce, tag, truncated
-   ciphertext) with graphical elements (lines, tables). This is not raw YAML —
-   it is a custom-rendered representation.
-
-**Page metadata (on every page):**
-
-- Page number / total pages
-- SHA-256 checksum of the CBOR-encoded envelope (same checksum as in QR payload)
-- Timestamp of PDF generation
+`decrypt --format pdf` and `convert --from-format pdf` extract all embedded
+raster images from the PDF file and scan each one for QR codes using the same
+logic as `--format qr` (Step 8). Only raster XObjects are considered — vector
+graphics are ignored. The header and human-readable data panels are not parsed
+and have no effect on decoding.
 
 ### Step 10 — Named secret storage `Planned`
 
