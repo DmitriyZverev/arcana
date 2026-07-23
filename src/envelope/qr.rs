@@ -323,7 +323,13 @@ fn decode_fragments(data: &[u8]) -> Result<Vec<Fragment>, DecodeFragmentsError> 
     };
     let mut fragments = Vec::new();
     for image in &images {
-        fragments.extend(decode_qr(image)?);
+        match decode_qr(image) {
+            Ok(frags) => fragments.extend(frags),
+            Err(DecodeQrError::NotFound | DecodeQrError::Detect(_)) => {}
+            Err(e @ DecodeQrError::FragmentDeserialize(_)) => {
+                return Err(DecodeFragmentsError::DecodeQr(e));
+            }
+        }
     }
     Ok(fragments)
 }

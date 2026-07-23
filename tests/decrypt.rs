@@ -1131,7 +1131,7 @@ fn try_decrypt_from_no_qr_png_with_qr_format() -> anyhow::Result<()> {
             .arg(fixtures::DEFAULT.password_file_path())
             .pass_stdin(fixtures::invalid::no_qr_png()?)?,
         ExpectedOutput::failure().stderr(indoc! {"
-            Error: NotFoundException
+            Error: Missing fragments: [1]
         "})
     );
     Ok(())
@@ -1184,6 +1184,71 @@ fn try_decrypt_from_non_image_tar_with_qr_format() -> anyhow::Result<()> {
             .pass_stdin(fixtures::invalid::non_image_tar()?)?,
         ExpectedOutput::failure().stderr(indoc! {"
             Error: The image format could not be determined
+        "})
+    );
+    Ok(())
+}
+
+#[test]
+fn decrypt_from_tar_with_valid_extra_foreign_qrcode_with_qr_format() -> anyhow::Result<()> {
+    assert_cmd!(
+        arkana_cmd()
+            .arg("decrypt")
+            .arg("--format")
+            .arg("qr")
+            .arg("--password-file")
+            .arg(fixtures::DEFAULT.password_file_path())
+            .pass_stdin(fixtures::DEFAULT.envelope_with_foreign_qrcode_tar()?)?,
+        ExpectedOutput::success().stdout(fixtures::DEFAULT.plaintext()?)
+    );
+    Ok(())
+}
+
+#[test]
+fn decrypt_from_tar_with_no_qr_image_with_qr_format() -> anyhow::Result<()> {
+    assert_cmd!(
+        arkana_cmd()
+            .arg("decrypt")
+            .arg("--format")
+            .arg("qr")
+            .arg("--password-file")
+            .arg(fixtures::DEFAULT.password_file_path())
+            .pass_stdin(fixtures::DEFAULT.envelope_with_no_qr_image_tar()?)?,
+        ExpectedOutput::success().stdout(fixtures::DEFAULT.plaintext()?)
+    );
+    Ok(())
+}
+
+#[test]
+fn try_decrypt_from_tar_with_fragment_replaced_by_foreign_qrcode_with_qr_format()
+-> anyhow::Result<()> {
+    assert_cmd!(
+        arkana_cmd()
+            .arg("decrypt")
+            .arg("--format")
+            .arg("qr")
+            .arg("--password-file")
+            .arg(fixtures::DEFAULT.password_file_path())
+            .pass_stdin(fixtures::invalid::envelope_fragment_replaced_with_foreign_qrcode_tar()?)?,
+        ExpectedOutput::failure().stderr(indoc! {"
+            Error: Missing fragments: [2]
+        "})
+    );
+    Ok(())
+}
+
+#[test]
+fn try_decrypt_from_foreign_qrcode_png_with_qr_format() -> anyhow::Result<()> {
+    assert_cmd!(
+        arkana_cmd()
+            .arg("decrypt")
+            .arg("--format")
+            .arg("qr")
+            .arg("--password-file")
+            .arg(fixtures::DEFAULT.password_file_path())
+            .pass_stdin(fixtures::invalid::foreign_qrcode_png()?)?,
+        ExpectedOutput::failure().stderr(indoc! {"
+            Error: Missing fragments: [1]
         "})
     );
     Ok(())

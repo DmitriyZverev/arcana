@@ -83,6 +83,14 @@ impl Fixture {
         std::fs::read(self.envelope_mixed_tar_file_path())
     }
 
+    pub fn envelope_with_foreign_qrcode_tar(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.file_path("envelope_with_foreign_qrcode.tar"))
+    }
+
+    pub fn envelope_with_no_qr_image_tar(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.file_path("envelope_with_no_qr_image.tar"))
+    }
+
     fn file_path(&self, file_name: &str) -> PathBuf {
         PathBuf::from("tests/fixtures")
             .join(self.name)
@@ -142,5 +150,15 @@ pub mod invalid {
 
     pub fn empty_tar() -> Result<Vec<u8>, std::io::Error> {
         std::fs::read(file_path("empty.tar"))
+    }
+
+    pub fn foreign_qrcode_png() -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(file_path("foreign_qrcode.png"))
+    }
+
+    pub fn envelope_fragment_replaced_with_foreign_qrcode_tar() -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(file_path(
+            "envelope_fragment_replaced_with_foreign_qrcode.tar",
+        ))
     }
 }
