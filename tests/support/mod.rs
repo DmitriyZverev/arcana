@@ -69,7 +69,7 @@ pub fn create_temp_file(content: &str) -> Result<tempfile::NamedTempFile, std::i
 }
 
 pub fn create_temp_file_in(
-    dir: &Path,
+    dir: impl AsRef<Path>,
     content: &str,
 ) -> Result<tempfile::NamedTempFile, std::io::Error> {
     let mut file = tempfile::NamedTempFile::new_in(dir)?;

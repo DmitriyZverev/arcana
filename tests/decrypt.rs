@@ -175,10 +175,9 @@ mod io_files {
     #[test]
     fn cwd_and_relative_input_and_output_files() -> anyhow::Result<()> {
         let current_dir = create_temp_dir()?;
-        let password_file =
-            create_temp_file_in(current_dir.path(), &fixtures::DEFAULT.password()?)?;
-        let input_file = create_temp_file_in(current_dir.path(), &fixtures::DEFAULT.envelope()?)?;
-        let output_file = create_temp_file_in(current_dir.path(), "")?;
+        let password_file = create_temp_file_in(&current_dir, &fixtures::DEFAULT.password()?)?;
+        let input_file = create_temp_file_in(&current_dir, &fixtures::DEFAULT.envelope()?)?;
+        let output_file = create_temp_file_in(&current_dir, "")?;
         let relative_password_file = relative_to(&password_file, &current_dir)?;
         let relative_input_file = relative_to(&input_file, &current_dir)?;
         let relative_output_file = relative_to(&output_file, &current_dir)?;
