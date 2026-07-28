@@ -1,8 +1,9 @@
 pub mod fixtures;
 pub mod macros;
 
+use anyhow::Context;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 pub struct ExpectedOutput {
@@ -78,6 +79,13 @@ pub fn create_temp_file_in(
 
 pub fn create_temp_dir() -> Result<tempfile::TempDir, std::io::Error> {
     tempfile::TempDir::new()
+}
+
+pub fn relative_to(path: impl AsRef<Path>, base: impl AsRef<Path>) -> anyhow::Result<PathBuf> {
+    let path = path.as_ref();
+    let base = base.as_ref();
+    pathdiff::diff_paths(path, base)
+        .with_context(|| format!("Failed to compute path {path:?} relative to {base:?}"))
 }
 
 pub fn hex_lines(data: &[u8], bytes_per_line: usize) -> String {

@@ -5,7 +5,7 @@ pub mod support;
 use indoc::indoc;
 use support::{
     ExpectedOutput, SpawnExt, arkana_cmd, create_temp_dir, create_temp_file, create_temp_file_in,
-    fixtures,
+    fixtures, relative_to,
 };
 
 mod basic {
@@ -178,17 +178,20 @@ mod io_files {
             create_temp_file_in(current_dir.path(), &fixtures::DEFAULT.password()?)?;
         let input_file = create_temp_file_in(current_dir.path(), &fixtures::DEFAULT.plaintext()?)?;
         let output_file = create_temp_file_in(current_dir.path(), "")?;
+        let relative_password_file = relative_to(&password_file, &current_dir)?;
+        let relative_input_file = relative_to(&input_file, &current_dir)?;
+        let relative_output_file = relative_to(&output_file, &current_dir)?;
         assert_cmd!(
             arkana_cmd()
                 .arg("--cwd")
                 .arg(current_dir.path())
                 .arg("encrypt")
                 .arg("--password-file")
-                .arg(password_file.path())
+                .arg(relative_password_file)
                 .arg("--input-file")
-                .arg(input_file.path())
+                .arg(relative_input_file)
                 .arg("--output-file")
-                .arg(output_file.path())
+                .arg(relative_output_file)
                 .output()?,
             ExpectedOutput::success()
         );
