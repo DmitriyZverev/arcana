@@ -34,7 +34,24 @@ mod format {
                     .arg("yaml")
                     .arg("--to-format")
                     .arg("yaml")
-                    .arg("--encoding")
+                    .arg("--to-format-yaml-encoding")
+                    .arg("base64")
+                    .pass_stdin(fixtures::FASTEST_BASE16.envelope()?)?,
+                ExpectedOutput::success().stdout(fixtures::FASTEST.envelope()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn to_yaml_encoding_base64_alias_from_base16() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("convert")
+                    .arg("--from-format")
+                    .arg("yaml")
+                    .arg("--to-format")
+                    .arg("yaml")
+                    .arg("--to-yaml-encoding")
                     .arg("base64")
                     .pass_stdin(fixtures::FASTEST_BASE16.envelope()?)?,
                 ExpectedOutput::success().stdout(fixtures::FASTEST.envelope()?)
@@ -51,7 +68,7 @@ mod format {
                     .arg("yaml")
                     .arg("--to-format")
                     .arg("yaml")
-                    .arg("--encoding")
+                    .arg("--to-format-yaml-encoding")
                     .arg("base16")
                     .pass_stdin(fixtures::FASTEST_BASE16_LOWERCASE.envelope()?)?,
                 ExpectedOutput::success().stdout(fixtures::FASTEST_BASE16.envelope()?)
@@ -132,7 +149,7 @@ mod format {
                     .arg("binary")
                     .arg("--to-format")
                     .arg("yaml")
-                    .arg("--encoding")
+                    .arg("--to-format-yaml-encoding")
                     .arg("base16")
                     .pass_stdin(fixtures::FASTEST_BASE16.envelope_bin()?)?,
                 ExpectedOutput::success().stdout(fixtures::FASTEST_BASE16.envelope()?)

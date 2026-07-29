@@ -2,10 +2,10 @@ mod cli;
 mod io;
 mod password;
 
-use crate::cli::{CliArgs, SubCommand};
+use crate::cli::{CliArgs, FormatParams, SubCommand};
 use crate::io::{read_input, resolve_path, write_output};
 use crate::password::read_password;
-use arkana::EncryptParams;
+use arkana::crypto::EncryptParams;
 use clap::Parser;
 
 fn main() -> anyhow::Result<()> {
@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
     match cli_args.command {
         Some(SubCommand::Encrypt {
             io,
-            encoding,
+            yaml,
             kdf,
             cipher,
         }) => {
@@ -30,7 +30,10 @@ fn main() -> anyhow::Result<()> {
                 kdf: kdf.into(),
                 cipher: cipher.into(),
             };
-            let output = arkana::encrypt(encrypt_params, io.format.into_output(encoding))?;
+            let output = arkana::encrypt(
+                encrypt_params,
+                io.format.into_output(FormatParams { yaml: yaml.into() }),
+            )?;
             write_output(&output, output_file, &cwd)?;
         }
         Some(SubCommand::Decrypt { io }) => {
@@ -45,15 +48,18 @@ fn main() -> anyhow::Result<()> {
         Some(SubCommand::Convert {
             from_format,
             to_format,
-            encoding,
+            yaml,
             input_file,
             output_file,
         }) => {
             let input_file = resolve_path(&cwd, input_file)?;
             let output_file = resolve_path(&cwd, output_file)?;
             let data = read_input(input_file, &cwd)?;
-            let output =
-                arkana::convert(&data, from_format.into(), to_format.into_output(encoding))?;
+            let output = arkana::convert(
+                &data,
+                from_format.into(),
+                to_format.into_output(FormatParams { yaml: yaml.into() }),
+            )?;
             write_output(&output, output_file, &cwd)?;
         }
         None => {

@@ -78,31 +78,31 @@ arkana encrypt \
 
 ### Encoding
 
-Use `--encoding` to choose how binary values (`salt`, `nonce`, `tag`,
-`ciphertext`) are represented in the YAML envelope. Supported values: `base16`,
-`base32`, `base64` (default).
+Use `--format-yaml-encoding` to choose how binary values (`salt`, `nonce`,
+`tag`, `ciphertext`) are represented in the YAML envelope. Supported values:
+`base16`, `base32`, `base64` (default).
 
 ```bash
 # Encrypt with base16 encoding
-arkana encrypt --encoding base16 --input-file secret.txt --output-file encrypted.yml
+arkana encrypt --format-yaml-encoding base16 --input-file secret.txt --output-file encrypted.yml
 
 # Encrypt with base32 encoding
-arkana encrypt --encoding base32 --input-file secret.txt --output-file encrypted.yml
+arkana encrypt --format-yaml-encoding base32 --input-file secret.txt --output-file encrypted.yml
 ```
 
 During decryption the encoding is read from the envelope — no flag is needed.
 
-The `--encoding` flag is also available in `arkana convert` when converting to
-YAML format:
+The `--format-yaml-encoding` flag is also available in `arkana convert` when
+converting to YAML format:
 
 ```bash
 # Convert binary to YAML with base16 encoding
-arkana convert --from-format binary --to-format yaml --encoding base16 < encrypted.bin > encrypted.yml
+arkana convert --from-format binary --to-format yaml --to-format-yaml-encoding base16 < encrypted.bin > encrypted.yml
 ```
 
 > [!NOTE]
-> The `--encoding` flag has no effect when `--format binary` is used — binary
-> format stores raw bytes.
+> The `--to-format-yaml-encoding` flag has no effect when `--format binary` is
+> used — binary format stores raw bytes.
 
 ### Output Format
 
