@@ -1,5 +1,10 @@
 use argon2::{Algorithm, Version};
-use arkana::{Argon2Params, CipherParams, InputFormat, KdfParams, OutputFormat};
+use arkana::envelope::text::yaml::SerializeParams as YamlSerializeParams;
+use arkana::{
+    crypto::{CipherParams, KdfParams},
+    envelope::Argon2Params,
+    format::{InputFormat, OutputFormat},
+};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::fmt::Display;
 use std::path::PathBuf;
@@ -184,12 +189,14 @@ impl From<Format> for InputFormat {
     }
 }
 
+pub struct FormatParams {
+    pub yaml: YamlSerializeParams,
+}
+
 impl Format {
-    pub fn into_output(self, encoding: Encoding) -> OutputFormat {
+    pub fn into_output(self, params: FormatParams) -> OutputFormat {
         match self {
-            Format::Yaml => OutputFormat::Yaml {
-                encoding: encoding.into(),
-            },
+            Format::Yaml => OutputFormat::Yaml(params.yaml),
             Format::Binary => OutputFormat::Binary,
             Format::Qr => OutputFormat::Qr,
         }
@@ -213,12 +220,12 @@ impl Display for Encoding {
     }
 }
 
-impl From<Encoding> for arkana::Encoding {
+impl From<Encoding> for arkana::envelope::text::Encoding {
     fn from(encoding: Encoding) -> Self {
         match encoding {
-            Encoding::Base16 => arkana::Encoding::Base16,
-            Encoding::Base32 => arkana::Encoding::Base32,
-            Encoding::Base64 => arkana::Encoding::Base64,
+            Encoding::Base16 => arkana::envelope::text::Encoding::Base16,
+            Encoding::Base32 => arkana::envelope::text::Encoding::Base32,
+            Encoding::Base64 => arkana::envelope::text::Encoding::Base64,
         }
     }
 }
@@ -239,15 +246,44 @@ pub(crate) struct IoArgs {
     pub format: Format,
 }
 
+#[derive(Debug, Args)]
+pub(crate) struct FormatYamlArgs {
+    /// Binary encoding for YAML format. [default: base64]
+    #[arg(long = "format-yaml-encoding")]
+    encoding: Option<Encoding>,
+}
+
+impl From<FormatYamlArgs> for YamlSerializeParams {
+    fn from(args: FormatYamlArgs) -> YamlSerializeParams {
+        YamlSerializeParams {
+            encoding: args.encoding.map(|e| e.into()),
+        }
+    }
+}
+
+#[derive(Debug, Args)]
+pub(crate) struct ToFormatYamlArgs {
+    /// Binary encoding for YAML format. [default: base64]
+    #[arg(long = "to-format-yaml-encoding", alias = "to-yaml-encoding")]
+    encoding: Option<Encoding>,
+}
+
+impl From<ToFormatYamlArgs> for YamlSerializeParams {
+    fn from(args: ToFormatYamlArgs) -> YamlSerializeParams {
+        YamlSerializeParams {
+            encoding: args.encoding.map(|e| e.into()),
+        }
+    }
+}
+
 #[derive(Debug, Subcommand)]
 pub(crate) enum SubCommand {
     /// Encrypts data from stdin or a file and writes encrypted data to stdout or a file
     Encrypt {
         #[command(flatten)]
         io: IoArgs,
-        /// Binary encoding for YAML format (base16, base32, base64)
-        #[arg(long, short = 'e', default_value_t)]
-        encoding: Encoding,
+        #[command(flatten)]
+        yaml: FormatYamlArgs,
         #[command(flatten)]
         kdf: KdfArgs,
         #[command(flatten)]
@@ -266,9 +302,8 @@ pub(crate) enum SubCommand {
         /// Target envelope format
         #[arg(long, short = 't', alias = "to")]
         to_format: Format,
-        /// Binary encoding for YAML output (base16, base32, base64)
-        #[arg(long, short = 'e', default_value_t)]
-        encoding: Encoding,
+        #[command(flatten)]
+        yaml: ToFormatYamlArgs,
         /// Read input from a file instead of standard input
         #[arg(long, short = 'i', alias = "input")]
         input_file: Option<PathBuf>,

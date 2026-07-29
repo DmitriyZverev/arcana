@@ -49,7 +49,7 @@ fn encrypt_decrypt_with_encoding_base16() -> anyhow::Result<()> {
     let plaintext = fixtures::DEFAULT.plaintext()?;
     let encrypt_output = arkana_cmd()
         .arg("encrypt")
-        .arg("--encoding")
+        .arg("--format-yaml-encoding")
         .arg("base16")
         .arg("--password-file")
         .arg(fixtures::DEFAULT.password_file_path())
@@ -69,7 +69,7 @@ fn encrypt_decrypt_with_encoding_base32() -> anyhow::Result<()> {
     let plaintext = fixtures::DEFAULT.plaintext()?;
     let encrypt_output = arkana_cmd()
         .arg("encrypt")
-        .arg("--encoding")
+        .arg("--format-yaml-encoding")
         .arg("base32")
         .arg("--password-file")
         .arg(fixtures::DEFAULT.password_file_path())

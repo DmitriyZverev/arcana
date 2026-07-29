@@ -35,9 +35,9 @@ Flags to override KDF and cipher settings per-invocation (`--kdf-type`,
 
 ### Encoding field `Done`
 
-`encoding` field in the YAML envelope (`--encoding base16|base32|base64`)
-controlling representation of binary values (`salt`, `nonce`, `tag`,
-`ciphertext`).
+`encoding` field in the YAML envelope
+(`--format-yaml-encoding base16|base32|base64`) controlling representation of
+binary values (`salt`, `nonce`, `tag`, `ciphertext`).
 
 ### Binary container format `Done`
 

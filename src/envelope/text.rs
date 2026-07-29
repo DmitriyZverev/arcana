@@ -1,4 +1,4 @@
-pub(crate) mod yaml;
+pub mod yaml;
 
 use crate::envelope;
 use crate::envelope::Argon2Params;
@@ -136,7 +136,8 @@ pub(crate) struct Envelope {
 }
 
 impl Envelope {
-    pub(crate) fn encode(envelope: envelope::Envelope, encoding: Encoding) -> Self {
+    pub(crate) fn encode(envelope: envelope::Envelope, encoding: Option<Encoding>) -> Self {
+        let encoding = encoding.unwrap_or_default();
         Envelope {
             encoding,
             params: EnvelopeParams {

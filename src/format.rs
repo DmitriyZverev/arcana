@@ -1,8 +1,8 @@
-use crate::envelope::{self, Envelope, text::Encoding};
+use crate::envelope::{self, Envelope};
 use thiserror::Error;
 
 pub enum OutputFormat {
-    Yaml { encoding: Encoding },
+    Yaml(envelope::text::yaml::SerializeParams),
     Binary,
     Qr,
 }
@@ -39,7 +39,7 @@ pub(crate) fn serialize(
     format: OutputFormat,
 ) -> Result<Vec<u8>, SerializeError> {
     match format {
-        OutputFormat::Yaml { encoding } => Ok(envelope::text::yaml::serialize(envelope, encoding)?),
+        OutputFormat::Yaml(params) => Ok(envelope::text::yaml::serialize(envelope, &params)?),
         OutputFormat::Binary => Ok(envelope::binary::serialize(&envelope)?),
         OutputFormat::Qr => Ok(envelope::qr::serialize(&envelope)?),
     }

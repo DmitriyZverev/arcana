@@ -609,7 +609,7 @@ mod format {
             assert_cmd!(
                 arkana_cmd()
                     .arg("encrypt")
-                    .arg("--encoding")
+                    .arg("--format-yaml-encoding")
                     .arg("base16")
                     .arg("--password-file")
                     .arg(fixtures::FASTEST_BASE16.password_file_path())
@@ -630,7 +630,7 @@ mod format {
             assert_cmd!(
                 arkana_cmd()
                     .arg("encrypt")
-                    .arg("--encoding")
+                    .arg("--format-yaml-encoding")
                     .arg("base32")
                     .arg("--password-file")
                     .arg(fixtures::FASTEST_BASE32.password_file_path())
@@ -651,7 +651,7 @@ mod format {
             assert_cmd!(
                 arkana_cmd()
                     .arg("encrypt")
-                    .arg("--encoding")
+                    .arg("--format-yaml-encoding")
                     .arg("base64")
                     .arg("--password-file")
                     .arg(fixtures::FASTEST.password_file_path())
@@ -675,11 +675,11 @@ mod format {
                     .arg("encrypt")
                     .arg("--password-file")
                     .arg(password_file.path())
-                    .arg("--encoding")
+                    .arg("--format-yaml-encoding")
                     .arg("invalid")
                     .output()?,
                 ExpectedOutput::code(2).stderr(indoc! {"
-                    error: invalid value 'invalid' for '--encoding <ENCODING>'
+                    error: invalid value 'invalid' for '--format-yaml-encoding <ENCODING>'
                       [possible values: base16, base32, base64]
 
                     For more information, try '--help'.

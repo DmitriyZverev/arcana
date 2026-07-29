@@ -1,6 +1,6 @@
 pub(crate) mod binary;
 pub(crate) mod qr;
-pub(crate) mod text;
+pub mod text;
 
 use argon2::{Algorithm, Version};
 use serde::{Deserialize, Serialize};
