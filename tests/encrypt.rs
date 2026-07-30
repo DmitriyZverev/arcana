@@ -584,6 +584,21 @@ mod format {
             );
             Ok(())
         }
+
+        #[test]
+        fn empty_text() -> anyhow::Result<()> {
+            assert_cmd_binary!(
+                arkana_cmd()
+                    .arg("encrypt")
+                    .arg("--format")
+                    .arg("binary")
+                    .arg("--password-file")
+                    .arg(fixtures::EMPTY_TEXT.password_file_path())
+                    .pass_stdin(fixtures::EMPTY_TEXT.plaintext()?)?,
+                ExpectedOutput::success().stdout(fixtures::EMPTY_TEXT.envelope_bin()?)
+            );
+            Ok(())
+        }
     }
 
     mod yaml {
@@ -668,6 +683,21 @@ mod format {
         }
 
         #[test]
+        fn empty_text() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("encrypt")
+                    .arg("--format")
+                    .arg("yaml")
+                    .arg("--password-file")
+                    .arg(fixtures::EMPTY_TEXT.password_file_path())
+                    .pass_stdin(fixtures::EMPTY_TEXT.plaintext()?)?,
+                ExpectedOutput::success().stdout(fixtures::EMPTY_TEXT.envelope()?)
+            );
+            Ok(())
+        }
+
+        #[test]
         fn err_invalid_encoding() -> anyhow::Result<()> {
             let password_file = create_temp_file("test_password_123")?;
             assert_cmd!(
@@ -718,6 +748,21 @@ mod format {
                     .arg(fixtures::LONG_TEXT.password_file_path())
                     .pass_stdin(fixtures::LONG_TEXT.plaintext()?)?,
                 ExpectedOutput::success().stdout(fixtures::LONG_TEXT.envelope_tar()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn empty_text() -> anyhow::Result<()> {
+            assert_cmd_binary!(
+                arkana_cmd()
+                    .arg("encrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::EMPTY_TEXT.password_file_path())
+                    .pass_stdin(fixtures::EMPTY_TEXT.plaintext()?)?,
+                ExpectedOutput::success().stdout(fixtures::EMPTY_TEXT.envelope_tar()?)
             );
             Ok(())
         }

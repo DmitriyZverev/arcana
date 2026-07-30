@@ -128,6 +128,7 @@ pub static FASTEST_BASE16_LOWERCASE: Fixture = Fixture {
     name: "fastest_base16_lowercase",
 };
 pub static LONG_TEXT: Fixture = Fixture { name: "long_text" };
+pub static EMPTY_TEXT: Fixture = Fixture { name: "empty_text" };
 
 pub mod invalid {
     use std::path::PathBuf;
