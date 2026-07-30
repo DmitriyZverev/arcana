@@ -1,9 +1,10 @@
+pub(crate) mod tar;
+
 use crate::envelope;
 use image::{DynamicImage, ImageError};
 use qrcode::types::QrError;
 use qrcode::{EcLevel, Version};
 use sha2::{Digest, Sha256};
-use std::io::Read;
 
 type FormatVersion = u8;
 type FragmentIndex = u16;
@@ -267,48 +268,27 @@ fn decode_images(images: &[DynamicImage]) -> Result<Vec<Fragment>, DecodeQrError
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum PackTarError {
+pub enum EncodePngFilesError {
     #[error(transparent)]
-    CreateImage(#[from] ImageError),
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
+    Write(#[from] ImageError),
 }
 
-fn pack_tar(images: Vec<DynamicImage>) -> Result<Vec<u8>, PackTarError> {
-    let mut archive = tar::Builder::new(Vec::new());
-    for (i, image) in images.iter().enumerate() {
-        let mut png_data = Vec::new();
-        image.write_to(
-            &mut std::io::Cursor::new(&mut png_data),
-            image::ImageFormat::Png,
-        )?;
-        let name = format!("{:05}.png", i + 1);
-        let mut header = tar::Header::new_gnu();
-        header.set_size(png_data.len() as u64);
-        header.set_mode(0o644);
-        header.set_cksum();
-        archive.append_data(&mut header, &name, png_data.as_slice())?;
-    }
-    archive.finish()?;
-    Ok(archive.into_inner()?)
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum UnpackTarError {
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-}
-
-fn unpack_tar(bytes: &[u8]) -> Result<Vec<Vec<u8>>, UnpackTarError> {
-    let mut archive = tar::Archive::new(bytes);
-    let mut entries_bytes = Vec::new();
-    for entry in archive.entries()? {
-        let mut entry = entry?;
-        let mut entry_bytes = Vec::new();
-        entry.read_to_end(&mut entry_bytes)?;
-        entries_bytes.push(entry_bytes);
-    }
-    Ok(entries_bytes)
+fn encode_png_files(images: &[DynamicImage]) -> Result<Vec<tar::File>, EncodePngFilesError> {
+    images
+        .iter()
+        .enumerate()
+        .map(|(i, image)| {
+            let mut content = Vec::new();
+            image.write_to(
+                &mut std::io::Cursor::new(&mut content),
+                image::ImageFormat::Png,
+            )?;
+            Ok(tar::File {
+                path: format!("{:05}.png", i + 1),
+                content,
+            })
+        })
+        .collect()
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -316,16 +296,16 @@ pub enum ExtractImagesError {
     #[error(transparent)]
     LoadImage(#[from] ImageError),
     #[error(transparent)]
-    UnpackTar(#[from] UnpackTarError),
+    UnpackTar(#[from] tar::UnpackError),
 }
 
 fn extract_images(data: &[u8]) -> Result<Vec<DynamicImage>, ExtractImagesError> {
     let images: Vec<DynamicImage> = if data.starts_with(PNG_MAGIC) || data.starts_with(JPEG_MAGIC) {
         vec![image::load_from_memory(data)?]
     } else {
-        unpack_tar(data)?
+        tar::unpack(data)?
             .iter()
-            .map(|bytes| image::load_from_memory(bytes))
+            .map(|file| image::load_from_memory(&file.content))
             .collect::<Result<_, _>>()?
     };
 
@@ -339,7 +319,9 @@ pub enum SerializeError {
     #[error(transparent)]
     Encode(#[from] QrError),
     #[error(transparent)]
-    PackTar(#[from] PackTarError),
+    EncodePngFiles(#[from] EncodePngFilesError),
+    #[error(transparent)]
+    PackTar(#[from] tar::PackError),
 }
 
 pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, SerializeError> {
@@ -350,7 +332,7 @@ pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, Serial
         .chain(fragments.ciphertext.iter())
         .map(encode_image)
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(pack_tar(images)?)
+    Ok(tar::pack(&encode_png_files(&images)?)?)
 }
 
 #[derive(Debug, thiserror::Error)]
