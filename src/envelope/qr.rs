@@ -201,7 +201,7 @@ fn assemble_fragments(mut fragments: Vec<Fragment>) -> Result<Vec<u8>, AssembleF
     Ok(assembled)
 }
 
-fn encode_qr(fragment: &Fragment) -> Result<DynamicImage, QrError> {
+fn encode_image(fragment: &Fragment) -> Result<DynamicImage, QrError> {
     use qrcode::QrCode;
     use qrcode::bits::Bits;
     let payload = fragment.to_bytes();
@@ -241,7 +241,7 @@ pub enum DecodeQrError {
     FragmentDeserialize(#[from] FragmentDeserializeError),
 }
 
-fn decode_qr(image: &DynamicImage) -> Result<Vec<Fragment>, DecodeQrError> {
+fn decode_image(image: &DynamicImage) -> Result<Vec<Fragment>, DecodeQrError> {
     let gray = image.to_luma8();
     let (w, h) = gray.dimensions();
     let luma = gray.into_raw();
@@ -253,6 +253,18 @@ fn decode_qr(image: &DynamicImage) -> Result<Vec<Fragment>, DecodeQrError> {
     for result in &results {
         let bytes = result.getRawBytes();
         fragments.push(Fragment::from_bytes(bytes)?);
+    }
+    Ok(fragments)
+}
+
+fn decode_images(images: &[DynamicImage]) -> Result<Vec<Fragment>, DecodeQrError> {
+    let mut fragments = Vec::new();
+    for image in images {
+        match decode_image(image) {
+            Ok(frags) => fragments.extend(frags),
+            Err(DecodeQrError::NotFound | DecodeQrError::Detect(_)) => {}
+            Err(e @ DecodeQrError::FragmentDeserialize(_)) => return Err(e),
+        }
     }
     Ok(fragments)
 }
@@ -303,16 +315,14 @@ fn unpack_tar(bytes: &[u8]) -> Result<Vec<Vec<u8>>, UnpackTarError> {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum DecodeFragmentsError {
+pub enum ExtractImagesError {
     #[error(transparent)]
     LoadImage(#[from] ImageError),
     #[error(transparent)]
     UnpackTar(#[from] UnpackTarError),
-    #[error(transparent)]
-    DecodeQr(#[from] DecodeQrError),
 }
 
-fn decode_fragments(data: &[u8]) -> Result<Vec<Fragment>, DecodeFragmentsError> {
+fn extract_images(data: &[u8]) -> Result<Vec<DynamicImage>, ExtractImagesError> {
     let images: Vec<DynamicImage> = if data.starts_with(PNG_MAGIC) || data.starts_with(JPEG_MAGIC) {
         vec![image::load_from_memory(data)?]
     } else {
@@ -321,17 +331,8 @@ fn decode_fragments(data: &[u8]) -> Result<Vec<Fragment>, DecodeFragmentsError> 
             .map(|bytes| image::load_from_memory(bytes))
             .collect::<Result<_, _>>()?
     };
-    let mut fragments = Vec::new();
-    for image in &images {
-        match decode_qr(image) {
-            Ok(frags) => fragments.extend(frags),
-            Err(DecodeQrError::NotFound | DecodeQrError::Detect(_)) => {}
-            Err(e @ DecodeQrError::FragmentDeserialize(_)) => {
-                return Err(DecodeFragmentsError::DecodeQr(e));
-            }
-        }
-    }
-    Ok(fragments)
+
+    Ok(images)
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -350,7 +351,7 @@ pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, Serial
         .header
         .iter()
         .chain(fragments.ciphertext.iter())
-        .map(encode_qr)
+        .map(encode_image)
         .collect::<Result<Vec<_>, _>>()?;
     Ok(pack_tar(images)?)
 }
@@ -358,7 +359,9 @@ pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, Serial
 #[derive(Debug, thiserror::Error)]
 pub enum DeserializeError {
     #[error(transparent)]
-    Decode(#[from] DecodeFragmentsError),
+    DecodeQr(#[from] DecodeQrError),
+    #[error(transparent)]
+    ExtractImages(#[from] ExtractImagesError),
     #[error(transparent)]
     AssembleFragments(#[from] AssembleFragmentsError),
     #[error(transparent)]
@@ -366,8 +369,8 @@ pub enum DeserializeError {
 }
 
 pub(crate) fn deserialize(data: &[u8]) -> Result<envelope::Envelope, DeserializeError> {
-    let fragments = decode_fragments(data)?;
-    let binary_data = assemble_fragments(fragments)?;
-    let envelope = envelope::binary::deserialize(&binary_data)?;
+    let fragments = decode_images(&extract_images(data)?)?;
+    let binary_envelope = assemble_fragments(fragments)?;
+    let envelope = envelope::binary::deserialize(&binary_envelope)?;
     Ok(envelope)
 }
