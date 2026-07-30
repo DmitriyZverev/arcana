@@ -100,11 +100,9 @@ fn split_into_fragments(
 ) -> Result<EnvelopeFragments, SplitIntoFragmentsError> {
     let header_bytes = envelope::binary::serialize_header(envelope)?;
     let ciphertext_bytes = &envelope.ciphertext;
-    let total_fragments = header_bytes.len().div_ceil(MAX_FRAGMENT_PAYLOAD_SIZE)
-        + ciphertext_bytes
-            .len()
-            .div_ceil(MAX_FRAGMENT_PAYLOAD_SIZE)
-            .max(1);
+    let header_count = header_bytes.len().div_ceil(MAX_FRAGMENT_PAYLOAD_SIZE);
+    let ciphertext_count = ciphertext_bytes.len().div_ceil(MAX_FRAGMENT_PAYLOAD_SIZE);
+    let total_fragments = header_count + ciphertext_count;
     if total_fragments > FragmentTotal::MAX as usize {
         return Err(SplitIntoFragmentsError::TooManyFragments(
             total_fragments,
@@ -129,7 +127,6 @@ fn split_into_fragments(
                 })
                 .collect()
         };
-    let header_count = header_bytes.len().div_ceil(MAX_FRAGMENT_PAYLOAD_SIZE);
     let header = make_fragments(header_bytes.chunks(MAX_FRAGMENT_PAYLOAD_SIZE), 0);
     let ciphertext = make_fragments(
         ciphertext_bytes.chunks(MAX_FRAGMENT_PAYLOAD_SIZE),
