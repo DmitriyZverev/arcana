@@ -1,9 +1,10 @@
+pub(crate) mod image;
 pub(crate) mod tar;
 
 use crate::envelope;
-use image::{DynamicImage, ImageError};
+use ::image::{DynamicImage, ImageError, ImageFormat, load_from_memory};
+use image::{QR_CAPACITY, decode_images, encode_image};
 use qrcode::types::QrError;
-use qrcode::{EcLevel, Version};
 use sha2::{Digest, Sha256};
 
 type FormatVersion = u8;
@@ -11,11 +12,6 @@ type FragmentIndex = u16;
 type FragmentTotal = u16;
 type Sha256Type = [u8; SHA_256_SIZE];
 
-const QR_VERSION: Version = Version::Normal(10);
-const QR_EC_LEVEL: EcLevel = EcLevel::M;
-const QR_CAPACITY: usize = 213;
-const QR_PIXELS_PER_MODULE: u32 = 10;
-const QR_QUIET_ZONE: u32 = 4;
 const FORMAT_VERSION_SIZE: usize = size_of::<FormatVersion>();
 const FRAGMENT_INDEX_SIZE: usize = size_of::<FragmentIndex>();
 const FRAGMENT_TOTAL_SIZE: usize = size_of::<FragmentTotal>();
@@ -38,7 +34,7 @@ pub enum FragmentDeserializeError {
     FragmentTooLarge(usize),
 }
 
-struct Fragment {
+pub(crate) struct Fragment {
     pub version: FormatVersion,
     pub index: FragmentIndex,
     pub total: FragmentTotal,
@@ -199,74 +195,6 @@ fn assemble_fragments(mut fragments: Vec<Fragment>) -> Result<Vec<u8>, AssembleF
     Ok(assembled)
 }
 
-fn encode_image(fragment: &Fragment) -> Result<DynamicImage, QrError> {
-    use qrcode::QrCode;
-    use qrcode::bits::Bits;
-    let payload = fragment.to_bytes();
-    let mut bits = Bits::new(QR_VERSION);
-    bits.push_byte_data(&payload)?;
-    bits.push_terminator(QR_EC_LEVEL)?;
-    let code = QrCode::with_bits(bits, QR_EC_LEVEL)?;
-    let module_count = code.width() as u32;
-    let image_size = (module_count + QR_QUIET_ZONE * 2) * QR_PIXELS_PER_MODULE;
-    let mut img = image::GrayImage::new(image_size, image_size);
-    for pixel in img.pixels_mut() {
-        *pixel = image::Luma([255u8]);
-    }
-    for (y, row) in code.to_colors().chunks(module_count as usize).enumerate() {
-        for (x, &color) in row.iter().enumerate() {
-            let px = (x as u32 + QR_QUIET_ZONE) * QR_PIXELS_PER_MODULE;
-            let py = (y as u32 + QR_QUIET_ZONE) * QR_PIXELS_PER_MODULE;
-            if color == qrcode::Color::Dark {
-                for dy in 0..QR_PIXELS_PER_MODULE {
-                    for dx in 0..QR_PIXELS_PER_MODULE {
-                        img.put_pixel(px + dx, py + dy, image::Luma([0u8]));
-                    }
-                }
-            }
-        }
-    }
-    Ok(DynamicImage::ImageLuma8(img))
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum DecodeQrError {
-    #[error(transparent)]
-    Detect(#[from] rxing::Exceptions),
-    #[error("No QR code found in image")]
-    NotFound,
-    #[error(transparent)]
-    FragmentDeserialize(#[from] FragmentDeserializeError),
-}
-
-fn decode_image(image: &DynamicImage) -> Result<Vec<Fragment>, DecodeQrError> {
-    let gray = image.to_luma8();
-    let (w, h) = gray.dimensions();
-    let luma = gray.into_raw();
-    let results = rxing::helpers::detect_multiple_in_luma(luma, w, h)?;
-    if results.is_empty() {
-        return Err(DecodeQrError::NotFound);
-    }
-    let mut fragments = Vec::with_capacity(results.len());
-    for result in &results {
-        let bytes = result.getRawBytes();
-        fragments.push(Fragment::from_bytes(bytes)?);
-    }
-    Ok(fragments)
-}
-
-fn decode_images(images: &[DynamicImage]) -> Result<Vec<Fragment>, DecodeQrError> {
-    let mut fragments = Vec::new();
-    for image in images {
-        match decode_image(image) {
-            Ok(frags) => fragments.extend(frags),
-            Err(DecodeQrError::NotFound | DecodeQrError::Detect(_)) => {}
-            Err(e @ DecodeQrError::FragmentDeserialize(_)) => return Err(e),
-        }
-    }
-    Ok(fragments)
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum EncodePngFilesError {
     #[error(transparent)]
@@ -279,10 +207,7 @@ fn encode_png_files(images: &[DynamicImage]) -> Result<Vec<tar::File>, EncodePng
         .enumerate()
         .map(|(i, image)| {
             let mut content = Vec::new();
-            image.write_to(
-                &mut std::io::Cursor::new(&mut content),
-                image::ImageFormat::Png,
-            )?;
+            image.write_to(&mut std::io::Cursor::new(&mut content), ImageFormat::Png)?;
             Ok(tar::File {
                 path: format!("{:05}.png", i + 1),
                 content,
@@ -301,11 +226,11 @@ pub enum ExtractImagesError {
 
 fn extract_images(data: &[u8]) -> Result<Vec<DynamicImage>, ExtractImagesError> {
     let images: Vec<DynamicImage> = if data.starts_with(PNG_MAGIC) || data.starts_with(JPEG_MAGIC) {
-        vec![image::load_from_memory(data)?]
+        vec![load_from_memory(data)?]
     } else {
         tar::unpack(data)?
             .iter()
-            .map(|file| image::load_from_memory(&file.content))
+            .map(|file| load_from_memory(&file.content))
             .collect::<Result<_, _>>()?
     };
 
@@ -330,7 +255,7 @@ pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, Serial
         .header
         .iter()
         .chain(fragments.ciphertext.iter())
-        .map(encode_image)
+        .map(|fragment| encode_image(&fragment.to_bytes()))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(tar::pack(&encode_png_files(&images)?)?)
 }
@@ -338,7 +263,7 @@ pub(crate) fn serialize(envelope: &envelope::Envelope) -> Result<Vec<u8>, Serial
 #[derive(Debug, thiserror::Error)]
 pub enum DeserializeError {
     #[error(transparent)]
-    DecodeQr(#[from] DecodeQrError),
+    FragmentDeserialize(#[from] FragmentDeserializeError),
     #[error(transparent)]
     ExtractImages(#[from] ExtractImagesError),
     #[error(transparent)]
@@ -347,8 +272,17 @@ pub enum DeserializeError {
     BinaryDeserialize(#[from] envelope::binary::DeserializeError),
 }
 
+pub(crate) fn deserialize_fragments(
+    payloads: &[Vec<u8>],
+) -> Result<Vec<Fragment>, FragmentDeserializeError> {
+    payloads
+        .iter()
+        .map(|payload| Fragment::from_bytes(payload))
+        .collect()
+}
+
 pub(crate) fn deserialize(data: &[u8]) -> Result<envelope::Envelope, DeserializeError> {
-    let fragments = decode_images(&extract_images(data)?)?;
+    let fragments = deserialize_fragments(&decode_images(&extract_images(data)?))?;
     let binary_envelope = assemble_fragments(fragments)?;
     let envelope = envelope::binary::deserialize(&binary_envelope)?;
     Ok(envelope)
