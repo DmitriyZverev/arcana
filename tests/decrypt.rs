@@ -1151,6 +1151,66 @@ mod format {
         }
 
         #[test]
+        fn long_text_from_png_3_col() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("decrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::LONG_TEXT.password_file_path())
+                    .pass_stdin(fixtures::LONG_TEXT.envelope_png_3_col()?)?,
+                ExpectedOutput::success().stdout(fixtures::LONG_TEXT.plaintext()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn long_text_from_png_4_col() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("decrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::LONG_TEXT.password_file_path())
+                    .pass_stdin(fixtures::LONG_TEXT.envelope_png_4_col()?)?,
+                ExpectedOutput::success().stdout(fixtures::LONG_TEXT.plaintext()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn long_text_from_png_5_col() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("decrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::LONG_TEXT.password_file_path())
+                    .pass_stdin(fixtures::LONG_TEXT.envelope_png_5_col()?)?,
+                ExpectedOutput::success().stdout(fixtures::LONG_TEXT.plaintext()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn long_text_from_png_45_deg() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("decrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::LONG_TEXT.password_file_path())
+                    .pass_stdin(fixtures::LONG_TEXT.envelope_png_45_deg()?)?,
+                ExpectedOutput::success().stdout(fixtures::LONG_TEXT.plaintext()?)
+            );
+            Ok(())
+        }
+
+        #[test]
         fn from_png() -> anyhow::Result<()> {
             assert_cmd!(
                 arkana_cmd()
@@ -1160,6 +1220,21 @@ mod format {
                     .arg("--password-file")
                     .arg(fixtures::DEFAULT.password_file_path())
                     .pass_stdin(fixtures::DEFAULT.envelope_png()?)?,
+                ExpectedOutput::success().stdout(fixtures::DEFAULT.plaintext()?)
+            );
+            Ok(())
+        }
+
+        #[test]
+        fn from_png_45_deg() -> anyhow::Result<()> {
+            assert_cmd!(
+                arkana_cmd()
+                    .arg("decrypt")
+                    .arg("--format")
+                    .arg("qr")
+                    .arg("--password-file")
+                    .arg(fixtures::DEFAULT.password_file_path())
+                    .pass_stdin(fixtures::DEFAULT.envelope_png_45_deg()?)?,
                 ExpectedOutput::success().stdout(fixtures::DEFAULT.plaintext()?)
             );
             Ok(())

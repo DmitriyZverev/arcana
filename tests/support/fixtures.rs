@@ -67,6 +67,38 @@ impl Fixture {
         std::fs::read(self.envelope_png_file_path())
     }
 
+    pub fn envelope_png_3_col_file_path(&self) -> PathBuf {
+        self.file_path("envelope_3_col.png")
+    }
+
+    pub fn envelope_png_3_col(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.envelope_png_3_col_file_path())
+    }
+
+    pub fn envelope_png_4_col_file_path(&self) -> PathBuf {
+        self.file_path("envelope_4_col.png")
+    }
+
+    pub fn envelope_png_4_col(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.envelope_png_4_col_file_path())
+    }
+
+    pub fn envelope_png_5_col_file_path(&self) -> PathBuf {
+        self.file_path("envelope_5_col.png")
+    }
+
+    pub fn envelope_png_5_col(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.envelope_png_5_col_file_path())
+    }
+
+    pub fn envelope_png_45_deg_file_path(&self) -> PathBuf {
+        self.file_path("envelope_45_deg.png")
+    }
+
+    pub fn envelope_png_45_deg(&self) -> Result<Vec<u8>, std::io::Error> {
+        std::fs::read(self.envelope_png_45_deg_file_path())
+    }
+
     pub fn envelope_jpg_file_path(&self) -> PathBuf {
         self.file_path("envelope.jpg")
     }
